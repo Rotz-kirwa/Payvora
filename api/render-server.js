@@ -45,4 +45,16 @@ const app = http.createServer(async (req, res) => {
 
 app.listen(port, host, () => {
   console.log(`Payvora listening on http://${host}:${port}`);
+
+  const required = [
+    "DATABASE_URL", "JWT_SECRET", "MPESA_CONSUMER_KEY", "MPESA_CONSUMER_SECRET",
+    "MPESA_PASSKEY", "MPESA_CALLBACK_URL", "MPESA_ENVIRONMENT",
+    "SMS_PROVIDER", "ONFON_API_KEY", "ONFON_CLIENT_ID", "ONFON_SENDER_ID",
+  ];
+  const missing = required.filter((k) => !process.env[k]);
+  if (missing.length) {
+    console.error("[env] MISSING env vars:", missing.join(", "));
+  } else {
+    console.log("[env] All required env vars present");
+  }
 });
