@@ -41,23 +41,28 @@ async function tryServeStatic(pathname, res) {
 }
 
 const app = http.createServer(async (req, res) => {
-  try {
-    const { pathname } = new URL(req.url, "http://localhost");
+  const start = Date.now();
+  const { pathname } = new URL(req.url, "http://localhost");
+  const isApi = pathname.startsWith("/api/");
 
-    // Always try static files from dist/client/ first
+  if (req.method !== "GET" || isApi) {
+    console.log(`[req] ${req.method} ${pathname}`);
+  }
+
+  try {
+    // Serve static files from dist/client/ first
     const servedStatic = await tryServeStatic(pathname, res);
     if (servedStatic) return;
 
-    // /assets/* that didn't resolve to a file → hard 404, never fall through to SSR
-    // (prevents SSR from returning HTML in response to a JS module fetch)
+    // /assets/* not found → hard 404, don't fall through to SSR
     if (pathname.startsWith("/assets/")) {
-      console.warn("[static] 404 for asset:", pathname);
+      console.warn("[static] 404:", pathname);
       res.statusCode = 404;
       res.end("Not Found");
       return;
     }
 
-    // All other requests → TanStack Start SSR
+    // Everything else → TanStack Start SSR
     const protocol = req.headers["x-forwarded-proto"] ?? "http";
     const requestHost = req.headers.host ?? `${host}:${port}`;
     const url = `${protocol}://${requestHost}${req.url}`;
@@ -86,8 +91,11 @@ const app = http.createServer(async (req, res) => {
     for (const [key, value] of response.headers.entries()) {
       res.setHeader(key, value);
     }
-
     res.end(Buffer.from(await response.arrayBuffer()));
+
+    if (req.method !== "GET" || isApi) {
+      console.log(`[res] ${req.method} ${pathname} → ${response.status} (${Date.now() - start}ms)`);
+    }
   } catch (error) {
     console.error("[render-server]", error);
     res.statusCode = 500;
