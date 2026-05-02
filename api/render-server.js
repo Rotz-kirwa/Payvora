@@ -1,11 +1,57 @@
 import http from "node:http";
+import { readFile, stat } from "node:fs/promises";
+import { extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import server from "../dist/server/server.js";
 
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const CLIENT_DIR = join(__dirname, "../dist/client");
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
 
+const MIME = {
+  ".js":    "application/javascript; charset=utf-8",
+  ".css":   "text/css; charset=utf-8",
+  ".html":  "text/html; charset=utf-8",
+  ".json":  "application/json",
+  ".png":   "image/png",
+  ".jpg":   "image/jpeg",
+  ".jpeg":  "image/jpeg",
+  ".svg":   "image/svg+xml",
+  ".ico":   "image/x-icon",
+  ".woff":  "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf":   "font/ttf",
+  ".map":   "application/json",
+};
+
+async function tryServeStatic(pathname, res) {
+  try {
+    const filePath = join(CLIENT_DIR, pathname);
+    await stat(filePath);
+    const content = await readFile(filePath);
+    const mime = MIME[extname(filePath)] ?? "application/octet-stream";
+    res.statusCode = 200;
+    res.setHeader("Content-Type", mime);
+    res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    res.end(content);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const app = http.createServer(async (req, res) => {
   try {
+    const { pathname } = new URL(req.url, "http://localhost");
+
+    // Serve static assets directly from dist/client/
+    if (pathname.startsWith("/assets/") || pathname === "/favicon.jpg" || pathname === "/favicon.ico") {
+      const served = await tryServeStatic(pathname, res);
+      if (served) return;
+    }
+
+    // All other requests go to TanStack Start SSR handler
     const protocol = req.headers["x-forwarded-proto"] ?? "http";
     const requestHost = req.headers.host ?? `${host}:${port}`;
     const url = `${protocol}://${requestHost}${req.url}`;
