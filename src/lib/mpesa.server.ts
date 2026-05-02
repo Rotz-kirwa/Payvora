@@ -80,7 +80,7 @@ export async function stkPush(
     PartyA: normalizedPhone,
     PartyB: TILL_NUMBER,
     PhoneNumber: normalizedPhone,
-    CallBackURL: callbackUrl,
+    CallBackURL: new URL("/mpesa/callback", callbackUrl).toString(),
     AccountReference: reference.slice(0, 12),
     TransactionDesc: description.slice(0, 13),
   };
