@@ -138,7 +138,9 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
 
 export async function registerC2bUrls() {
   const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim();
-  const shortCode = process.env.MPESA_SHORTCODE?.trim() ?? STORE_NUMBER;
+  // For Buy Goods, C2B callbacks are routed by Safaricom based on the Till Number,
+  // not the Store/Merchant number.
+  const shortCode = process.env.MPESA_TILL_NUMBER?.trim() ?? TILL_NUMBER;
 
   if (!callbackUrl) throw new Error("MPESA_CALLBACK_URL must be set");
 
