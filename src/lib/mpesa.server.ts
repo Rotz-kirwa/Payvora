@@ -147,7 +147,9 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
 
 export async function registerC2bUrls() {
   const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim();
-  const shortCode = process.env.MPESA_SHORTCODE?.trim() ?? STORE_NUMBER;
+  // Direct C2B Buy Goods callbacks are registered against the receiving till.
+  // STK Push still uses the organization shortcode as BusinessShortCode.
+  const shortCode = process.env.MPESA_TILL_NUMBER?.trim() ?? TILL_NUMBER;
 
   if (!callbackUrl) throw new Error("MPESA_CALLBACK_URL must be set");
 
