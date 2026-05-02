@@ -38,6 +38,36 @@ function parseAmount(value: unknown): number | null {
   return null;
 }
 
+function sanitizeC2bBody(body: UnknownRecord) {
+  return {
+    TransactionType: parseString(body.TransactionType),
+    TransID: parseString(body.TransID),
+    TransTime: parseString(body.TransTime),
+    TransAmount: parseString(body.TransAmount) ?? parseAmount(body.TransAmount),
+    BusinessShortCode: parseString(body.BusinessShortCode),
+    BillRefNumber: parseString(body.BillRefNumber),
+    InvoiceNumber: parseString(body.InvoiceNumber),
+    OrgAccountBalance: parseString(body.OrgAccountBalance),
+    ThirdPartyTransID: parseString(body.ThirdPartyTransID),
+    MSISDN: normalizePhone(body.MSISDN),
+    FirstName: parseString(body.FirstName),
+    MiddleName: parseString(body.MiddleName),
+    LastName: parseString(body.LastName),
+  };
+}
+
+function sanitizeStkCallback(body: UnknownRecord) {
+  const stkCallback =
+    isRecord(body.Body) && isRecord(body.Body.stkCallback) ? body.Body.stkCallback : {};
+
+  return {
+    MerchantRequestID: parseString(stkCallback.MerchantRequestID),
+    CheckoutRequestID: parseString(stkCallback.CheckoutRequestID),
+    ResultCode: parseAmount(stkCallback.ResultCode),
+    ResultDesc: parseString(stkCallback.ResultDesc),
+  };
+}
+
 function formatAmount(value: number): string {
   return value.toFixed(2);
 }
@@ -91,11 +121,11 @@ function getStatus(resultCode: number): MpesaStatus {
 }
 
 export async function handleStkCallback(body: unknown): Promise<CallbackResult> {
-  console.log("[handleStkCallback] Received callback:", JSON.stringify(body, null, 2));
-
   if (!isRecord(body) || !isRecord(body.Body) || !isRecord(body.Body.stkCallback)) {
     throw new Error("Invalid STK callback body");
   }
+
+  console.log("[handleStkCallback] Received callback:", sanitizeStkCallback(body));
 
   const stkCallback = body.Body.stkCallback;
 
@@ -118,7 +148,7 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
 
   const transactionDate = parseMpesaDate(getItemValue("TransactionDate"));
 
-  await db
+  const updated = await db
     .update(mpesaPayments)
     .set({
       status,
@@ -130,35 +160,44 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
       updatedAt: now,
       ...(status === "Success" ? { paidAt: transactionDate ?? now } : {}),
     })
-    .where(eq(mpesaPayments.checkoutRequestId, checkoutRequestId));
+    .where(eq(mpesaPayments.checkoutRequestId, checkoutRequestId))
+    .returning({ id: mpesaPayments.id, status: mpesaPayments.status });
+
+  console.log("[handleStkCallback] DB update result:", {
+    checkoutRequestId,
+    updated: updated.length,
+    status,
+  });
 
   return accepted();
 }
 
 export async function handleC2bConfirmation(body: unknown): Promise<CallbackResult> {
-  console.log("[handleC2bConfirmation] Received callback:", JSON.stringify(body, null, 2));
-
   if (!isRecord(body)) {
     throw new Error("Invalid C2B confirmation body");
   }
+
+  console.log("[handleC2bConfirmation] Received callback:", sanitizeC2bBody(body));
 
   const mpesaReceiptNumber = parseString(body.TransID);
   const phone = normalizePhone(body.MSISDN);
   const amount = parseAmount(body.TransAmount);
 
-  if (!mpesaReceiptNumber || !phone) {
-    throw new Error("C2B confirmation is missing TransID or MSISDN");
+  if (!mpesaReceiptNumber || !phone || amount === null) {
+    throw new Error("C2B confirmation is missing TransID, MSISDN, or TransAmount");
   }
 
-  console.log(`[handleC2bConfirmation] Processing ${mpesaReceiptNumber} from ${phone} for ${amount}`);
-
   const now = new Date();
-  const accountReference = parseString(body.BillRefNumber) ?? parseString(body.AccountReference);
+  const accountReference =
+    parseString(body.BillRefNumber) ??
+    parseString(body.InvoiceNumber) ??
+    parseString(body.AccountReference);
   const paidAt = parseMpesaDate(body.TransTime) ?? now;
   const rawCallbackJson = body;
   // For Buy Goods: BusinessShortCode in callback = the till number; store is the parent
   const tillNumber = parseString(body.BusinessShortCode) ?? process.env.MPESA_TILL_NUMBER ?? null;
   const businessShortcode = process.env.MPESA_SHORTCODE ?? null;
+  const transactionDesc = parseString(body.TransactionType) ?? "CustomerPayBillOnline";
 
   const [inserted] = await db
     .insert(mpesaPayments)
@@ -171,6 +210,7 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
       businessShortcode,
       mpesaReceiptNumber,
       accountReference,
+      transactionDesc,
       resultCode: 0,
       resultDesc: "C2B Confirmed",
       rawCallbackJson,
@@ -180,6 +220,22 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
     })
     .onConflictDoNothing({ target: mpesaPayments.mpesaReceiptNumber })
     .returning({ id: mpesaPayments.id });
+
+  if (inserted?.id) {
+    console.log("[handleC2bConfirmation] DB insert success:", {
+      paymentId: inserted.id,
+      transId: mpesaReceiptNumber,
+      amount,
+      phone,
+      tillNumber,
+    });
+  } else {
+    console.log("[handleC2bConfirmation] Duplicate callback ignored:", {
+      transId: mpesaReceiptNumber,
+      amount,
+      phone,
+    });
+  }
 
   // Trigger SMS automation — errors must never fail the payment
   if (inserted?.id && amount != null) {
@@ -198,6 +254,9 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
 }
 
 export async function handleC2bValidation(body: unknown): Promise<CallbackResult> {
-  console.log("[handleC2bValidation] Received callback:", JSON.stringify(body, null, 2));
+  console.log(
+    "[handleC2bValidation] Received callback:",
+    isRecord(body) ? sanitizeC2bBody(body) : { validJsonObject: false },
+  );
   return accepted();
 }

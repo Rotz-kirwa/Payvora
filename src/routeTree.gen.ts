@@ -10,23 +10,32 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as HealthRouteImport } from './routes/health'
 import { Route as CallbackRouteImport } from './routes/callback'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as MpesaCallbackRouteImport } from './routes/mpesa.callback'
 import { Route as C2bValidationRouteImport } from './routes/c2b.validation'
 import { Route as C2bConfirmationRouteImport } from './routes/c2b.confirmation'
+import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as AppSmsAutomationRouteImport } from './routes/_app.sms-automation'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppPaymentsRouteImport } from './routes/_app.payments'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
+import { Route as ApiMpesaCallbackRouteImport } from './routes/api.mpesa.callback'
 import { Route as ApiPaymentsC2bValidationRouteImport } from './routes/api.payments.c2b.validation'
+import { Route as ApiPaymentsC2bStatusRouteImport } from './routes/api.payments.c2b.status'
 import { Route as ApiPaymentsC2bConfirmationRouteImport } from './routes/api.payments.c2b.confirmation'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CallbackRoute = CallbackRouteImport.update({
@@ -58,6 +67,11 @@ const C2bConfirmationRoute = C2bConfirmationRouteImport.update({
   path: '/c2b/confirmation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSmsAutomationRoute = AppSmsAutomationRouteImport.update({
   id: '/sms-automation',
   path: '/sms-automation',
@@ -83,12 +97,22 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiMpesaCallbackRoute = ApiMpesaCallbackRouteImport.update({
+  id: '/api/mpesa/callback',
+  path: '/api/mpesa/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPaymentsC2bValidationRoute =
   ApiPaymentsC2bValidationRouteImport.update({
     id: '/api/payments/c2b/validation',
     path: '/api/payments/c2b/validation',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPaymentsC2bStatusRoute = ApiPaymentsC2bStatusRouteImport.update({
+  id: '/api/payments/c2b/status',
+  path: '/api/payments/c2b/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPaymentsC2bConfirmationRoute =
   ApiPaymentsC2bConfirmationRouteImport.update({
     id: '/api/payments/c2b/confirmation',
@@ -99,48 +123,60 @@ const ApiPaymentsC2bConfirmationRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/callback': typeof CallbackRoute
+  '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/analytics': typeof AppAnalyticsRoute
   '/customers': typeof AppCustomersRoute
   '/payments': typeof AppPaymentsRoute
   '/settings': typeof AppSettingsRoute
   '/sms-automation': typeof AppSmsAutomationRoute
+  '/api/health': typeof ApiHealthRoute
   '/c2b/confirmation': typeof C2bConfirmationRoute
   '/c2b/validation': typeof C2bValidationRoute
   '/mpesa/callback': typeof MpesaCallbackRoute
+  '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
   '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRoute
+  '/api/payments/c2b/status': typeof ApiPaymentsC2bStatusRoute
   '/api/payments/c2b/validation': typeof ApiPaymentsC2bValidationRoute
 }
 export interface FileRoutesByTo {
   '/callback': typeof CallbackRoute
+  '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/analytics': typeof AppAnalyticsRoute
   '/customers': typeof AppCustomersRoute
   '/payments': typeof AppPaymentsRoute
   '/settings': typeof AppSettingsRoute
   '/sms-automation': typeof AppSmsAutomationRoute
+  '/api/health': typeof ApiHealthRoute
   '/c2b/confirmation': typeof C2bConfirmationRoute
   '/c2b/validation': typeof C2bValidationRoute
   '/mpesa/callback': typeof MpesaCallbackRoute
   '/': typeof AppIndexRoute
+  '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
   '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRoute
+  '/api/payments/c2b/status': typeof ApiPaymentsC2bStatusRoute
   '/api/payments/c2b/validation': typeof ApiPaymentsC2bValidationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/callback': typeof CallbackRoute
+  '/health': typeof HealthRoute
   '/login': typeof LoginRoute
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/customers': typeof AppCustomersRoute
   '/_app/payments': typeof AppPaymentsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/sms-automation': typeof AppSmsAutomationRoute
+  '/api/health': typeof ApiHealthRoute
   '/c2b/confirmation': typeof C2bConfirmationRoute
   '/c2b/validation': typeof C2bValidationRoute
   '/mpesa/callback': typeof MpesaCallbackRoute
   '/_app/': typeof AppIndexRoute
+  '/api/mpesa/callback': typeof ApiMpesaCallbackRoute
   '/api/payments/c2b/confirmation': typeof ApiPaymentsC2bConfirmationRoute
+  '/api/payments/c2b/status': typeof ApiPaymentsC2bStatusRoute
   '/api/payments/c2b/validation': typeof ApiPaymentsC2bValidationRoute
 }
 export interface FileRouteTypes {
@@ -148,58 +184,74 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/callback'
+    | '/health'
     | '/login'
     | '/analytics'
     | '/customers'
     | '/payments'
     | '/settings'
     | '/sms-automation'
+    | '/api/health'
     | '/c2b/confirmation'
     | '/c2b/validation'
     | '/mpesa/callback'
+    | '/api/mpesa/callback'
     | '/api/payments/c2b/confirmation'
+    | '/api/payments/c2b/status'
     | '/api/payments/c2b/validation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/callback'
+    | '/health'
     | '/login'
     | '/analytics'
     | '/customers'
     | '/payments'
     | '/settings'
     | '/sms-automation'
+    | '/api/health'
     | '/c2b/confirmation'
     | '/c2b/validation'
     | '/mpesa/callback'
     | '/'
+    | '/api/mpesa/callback'
     | '/api/payments/c2b/confirmation'
+    | '/api/payments/c2b/status'
     | '/api/payments/c2b/validation'
   id:
     | '__root__'
     | '/_app'
     | '/callback'
+    | '/health'
     | '/login'
     | '/_app/analytics'
     | '/_app/customers'
     | '/_app/payments'
     | '/_app/settings'
     | '/_app/sms-automation'
+    | '/api/health'
     | '/c2b/confirmation'
     | '/c2b/validation'
     | '/mpesa/callback'
     | '/_app/'
+    | '/api/mpesa/callback'
     | '/api/payments/c2b/confirmation'
+    | '/api/payments/c2b/status'
     | '/api/payments/c2b/validation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   CallbackRoute: typeof CallbackRoute
+  HealthRoute: typeof HealthRoute
   LoginRoute: typeof LoginRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   C2bConfirmationRoute: typeof C2bConfirmationRoute
   C2bValidationRoute: typeof C2bValidationRoute
   MpesaCallbackRoute: typeof MpesaCallbackRoute
+  ApiMpesaCallbackRoute: typeof ApiMpesaCallbackRoute
   ApiPaymentsC2bConfirmationRoute: typeof ApiPaymentsC2bConfirmationRoute
+  ApiPaymentsC2bStatusRoute: typeof ApiPaymentsC2bStatusRoute
   ApiPaymentsC2bValidationRoute: typeof ApiPaymentsC2bValidationRoute
 }
 
@@ -210,6 +262,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/callback': {
@@ -254,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof C2bConfirmationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/sms-automation': {
       id: '/_app/sms-automation'
       path: '/sms-automation'
@@ -289,11 +355,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/mpesa/callback': {
+      id: '/api/mpesa/callback'
+      path: '/api/mpesa/callback'
+      fullPath: '/api/mpesa/callback'
+      preLoaderRoute: typeof ApiMpesaCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/payments/c2b/validation': {
       id: '/api/payments/c2b/validation'
       path: '/api/payments/c2b/validation'
       fullPath: '/api/payments/c2b/validation'
       preLoaderRoute: typeof ApiPaymentsC2bValidationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/c2b/status': {
+      id: '/api/payments/c2b/status'
+      path: '/api/payments/c2b/status'
+      fullPath: '/api/payments/c2b/status'
+      preLoaderRoute: typeof ApiPaymentsC2bStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/payments/c2b/confirmation': {
@@ -329,11 +409,15 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   CallbackRoute: CallbackRoute,
+  HealthRoute: HealthRoute,
   LoginRoute: LoginRoute,
+  ApiHealthRoute: ApiHealthRoute,
   C2bConfirmationRoute: C2bConfirmationRoute,
   C2bValidationRoute: C2bValidationRoute,
   MpesaCallbackRoute: MpesaCallbackRoute,
+  ApiMpesaCallbackRoute: ApiMpesaCallbackRoute,
   ApiPaymentsC2bConfirmationRoute: ApiPaymentsC2bConfirmationRoute,
+  ApiPaymentsC2bStatusRoute: ApiPaymentsC2bStatusRoute,
   ApiPaymentsC2bValidationRoute: ApiPaymentsC2bValidationRoute,
 }
 export const routeTree = rootRouteImport

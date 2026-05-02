@@ -80,12 +80,21 @@ export async function stkPush(
     PartyA: normalizedPhone,
     PartyB: TILL_NUMBER,
     PhoneNumber: normalizedPhone,
-    CallBackURL: new URL("/mpesa/callback", callbackUrl).toString(),
+    CallBackURL: new URL("/api/mpesa/callback", callbackUrl).toString(),
     AccountReference: reference.slice(0, 12),
     TransactionDesc: description.slice(0, 13),
   };
 
-  console.log("[stkPush] Request payload:", JSON.stringify(payload, null, 2));
+  console.log("[stkPush] Request payload:", {
+    BusinessShortCode: payload.BusinessShortCode,
+    TransactionType: payload.TransactionType,
+    Amount: payload.Amount,
+    PartyB: payload.PartyB,
+    PhoneNumber: payload.PhoneNumber,
+    CallBackURL: payload.CallBackURL,
+    AccountReference: payload.AccountReference,
+    TransactionDesc: payload.TransactionDesc,
+  });
 
   const res = await fetch(`${BASE}/mpesa/stkpush/v1/processrequest`, {
     method: "POST",
@@ -142,8 +151,8 @@ export async function registerC2bUrls() {
 
   if (!callbackUrl) throw new Error("MPESA_CALLBACK_URL must be set");
 
-  const confirmationUrl = new URL("/c2b/confirmation", callbackUrl).toString();
-  const validationUrl = new URL("/c2b/validation", callbackUrl).toString();
+  const confirmationUrl = new URL("/api/payments/c2b/confirmation", callbackUrl).toString();
+  const validationUrl = new URL("/api/payments/c2b/validation", callbackUrl).toString();
 
   const token = await getToken();
   const res = await fetch(`${BASE}/mpesa/c2b/v2/registerurl`, {
@@ -158,8 +167,24 @@ export async function registerC2bUrls() {
   });
 
   const text = await res.text();
-  const response = JSON.parse(text) as Record<string, unknown>;
+  let response: Record<string, unknown>;
+  try {
+    response = JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    response = { raw: text.slice(0, 500) };
+  }
   const errorMessage = typeof response.errorMessage === "string" ? response.errorMessage : null;
+
+  console.log("[registerC2bUrls] Safaricom response:", {
+    httpStatus: res.status,
+    shortCode,
+    confirmationUrl,
+    validationUrl,
+    responseCode: response.ResponseCode,
+    responseDescription: response.ResponseDescription,
+    errorCode: response.errorCode,
+    errorMessage,
+  });
 
   if (!res.ok && errorMessage !== "URLs are already registered") {
     throw new Error(`C2B URL registration failed (${res.status}): ${text}`);

@@ -44,12 +44,27 @@ function mpesaCallbackPlugin() {
         return handleStkCallback(body);
       });
 
+      registerRoute(server, "/api/mpesa/callback", async (body) => {
+        const { handleStkCallback } = await import("./src/lib/mpesa-callback.server");
+        return handleStkCallback(body);
+      });
+
       registerRoute(server, "/c2b/confirmation", async (body) => {
         const { handleC2bConfirmation } = await import("./src/lib/mpesa-callback.server");
         return handleC2bConfirmation(body);
       });
 
       registerRoute(server, "/c2b/validation", async (body) => {
+        const { handleC2bValidation } = await import("./src/lib/mpesa-callback.server");
+        return handleC2bValidation(body);
+      });
+
+      registerRoute(server, "/api/payments/c2b/confirmation", async (body) => {
+        const { handleC2bConfirmation } = await import("./src/lib/mpesa-callback.server");
+        return handleC2bConfirmation(body);
+      });
+
+      registerRoute(server, "/api/payments/c2b/validation", async (body) => {
         const { handleC2bValidation } = await import("./src/lib/mpesa-callback.server");
         return handleC2bValidation(body);
       });

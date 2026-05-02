@@ -61,7 +61,7 @@ fi
 echo "    Tunnel: $TUNNEL_URL"
 
 # Update .env with new callback URL
-NEW_CALLBACK="${TUNNEL_URL}/mpesa/callback"
+NEW_CALLBACK="${TUNNEL_URL}"
 sed -i "s|MPESA_CALLBACK_URL=.*|MPESA_CALLBACK_URL=\"${NEW_CALLBACK}\"|" "$ENV_FILE"
 echo "    Updated MPESA_CALLBACK_URL -> $NEW_CALLBACK"
 
@@ -86,8 +86,8 @@ async function main() {
   const body = {
     ShortCode: SHORTCODE,
     ResponseType: 'Completed',
-    ConfirmationURL: \`\${BASE_URL}/c2b/confirmation\`,
-    ValidationURL: \`\${BASE_URL}/c2b/validation\`,
+    ConfirmationURL: \`\${BASE_URL}/api/payments/c2b/confirmation\`,
+    ValidationURL: \`\${BASE_URL}/api/payments/c2b/validation\`,
   };
   const res = await fetch(\`\${DARAJA_BASE}/mpesa/c2b/v2/registerurl\`, {
     method: 'POST',
@@ -112,8 +112,9 @@ echo "  MOBOSOFT ENTERPRISE HQ — Payment Dashboard"
 echo "================================================"
 echo "  Local:    http://localhost:$PORT"
 echo "  Ngrok:    $TUNNEL_URL"
-echo "  Callback: ${TUNNEL_URL}/mpesa/callback"
-echo "  C2B confirmation: ${TUNNEL_URL}/c2b/confirmation"
+echo "  STK callback: ${TUNNEL_URL}/api/mpesa/callback"
+echo "  C2B confirmation: ${TUNNEL_URL}/api/payments/c2b/confirmation"
+echo "  C2B validation: ${TUNNEL_URL}/api/payments/c2b/validation"
 echo "================================================"
 echo "  Dev PID: $DEV_PID  |  Tunnel PID: $TUNNEL_PID"
 echo ""
