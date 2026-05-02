@@ -147,9 +147,7 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
 
 export async function registerC2bUrls() {
   const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim();
-  // Safaricom maps till → shortcode internally; C2B URLs must be registered
-  // under the store/shortcode (6270335), not the till number (895858).
-  const shortCode = process.env.MPESA_SHORTCODE?.trim() ?? STORE_NUMBER;
+  const shortCode = process.env.MPESA_TILL_NUMBER?.trim() ?? TILL_NUMBER;
 
   if (!callbackUrl) throw new Error("MPESA_CALLBACK_URL must be set");
 
