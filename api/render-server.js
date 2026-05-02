@@ -1,5 +1,5 @@
 import http from "node:http";
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import server from "../dist/server/server.js";
@@ -28,7 +28,6 @@ const MIME = {
 async function tryServeStatic(pathname, res) {
   try {
     const filePath = join(CLIENT_DIR, pathname);
-    await stat(filePath);
     const content = await readFile(filePath);
     const mime = MIME[extname(filePath)] ?? "application/octet-stream";
     res.statusCode = 200;
@@ -45,13 +44,20 @@ const app = http.createServer(async (req, res) => {
   try {
     const { pathname } = new URL(req.url, "http://localhost");
 
-    // Serve static assets directly from dist/client/
-    if (pathname.startsWith("/assets/") || pathname === "/favicon.jpg" || pathname === "/favicon.ico") {
-      const served = await tryServeStatic(pathname, res);
-      if (served) return;
+    // Always try static files from dist/client/ first
+    const servedStatic = await tryServeStatic(pathname, res);
+    if (servedStatic) return;
+
+    // /assets/* that didn't resolve to a file → hard 404, never fall through to SSR
+    // (prevents SSR from returning HTML in response to a JS module fetch)
+    if (pathname.startsWith("/assets/")) {
+      console.warn("[static] 404 for asset:", pathname);
+      res.statusCode = 404;
+      res.end("Not Found");
+      return;
     }
 
-    // All other requests go to TanStack Start SSR handler
+    // All other requests → TanStack Start SSR
     const protocol = req.headers["x-forwarded-proto"] ?? "http";
     const requestHost = req.headers.host ?? `${host}:${port}`;
     const url = `${protocol}://${requestHost}${req.url}`;
@@ -91,6 +97,7 @@ const app = http.createServer(async (req, res) => {
 
 app.listen(port, host, () => {
   console.log(`Payvora listening on http://${host}:${port}`);
+  console.log(`Serving static files from: ${CLIENT_DIR}`);
 
   const required = [
     "DATABASE_URL", "JWT_SECRET", "MPESA_CONSUMER_KEY", "MPESA_CONSUMER_SECRET",
