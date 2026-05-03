@@ -147,7 +147,8 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
 
 export async function registerC2bUrls() {
   const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim();
-  const shortCode = process.env.MPESA_TILL_NUMBER?.trim() ?? TILL_NUMBER;
+  // Safaricom confirmed: register under the store number, not the till number.
+  const shortCode = process.env.MPESA_SHORTCODE?.trim() ?? STORE_NUMBER;
 
   if (!callbackUrl) throw new Error("MPESA_CALLBACK_URL must be set");
 
