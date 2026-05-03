@@ -4,13 +4,35 @@ export const Route = createFileRoute("/api/mpesa/callback")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        try {
-          const body = await request.json();
-          const { handleStkCallback } = await import("../lib/mpesa-callback.server");
+        const { readAndAuditCallbackRequest, markCallbackAuditResult } = await import(
+          "../lib/callback-audit.server"
+        );
+        const audit = await readAndAuditCallbackRequest(
+          request,
+          "/api/mpesa/callback",
+          "stk_callback",
+        );
 
-          return Response.json(await handleStkCallback(body));
+        try {
+          const { handleStkCallback } = await import("../lib/mpesa-callback.server");
+          const result = await handleStkCallback(audit.body);
+          await markCallbackAuditResult(
+            audit.auditId,
+            "accepted",
+            result.ResultCode,
+            result.ResultDesc,
+          );
+
+          return Response.json(result);
         } catch (error) {
           console.error("[api/mpesa/callback]", error);
+          await markCallbackAuditResult(
+            audit.auditId,
+            "failed",
+            1,
+            "Failed to process callback",
+            error,
+          );
 
           return Response.json(
             { ResultCode: 1, ResultDesc: "Failed to process callback" },

@@ -45,6 +45,9 @@ export const Route = createFileRoute("/api/payments/c2b/status")({
           };
         }
 
+        const { getCallbackAuditSummary } = await import("../lib/callback-audit.server");
+        const callbackAudit = await getCallbackAuditSummary();
+
         return Response.json({
           ok: database.ok,
           service: "payvora-c2b",
@@ -54,6 +57,7 @@ export const Route = createFileRoute("/api/payments/c2b/status")({
           expected,
           env,
           database,
+          callbackAudit,
           timestamp: new Date().toISOString(),
         });
       },
