@@ -114,25 +114,23 @@ const updateCredentialFn = createServerFn({ method: "POST" })
       throw new Error(`${data.key} cannot be edited from the dashboard.`);
     }
 
-    const fs = await import("fs");
-    const path = await import("path");
-    const envPath = path.resolve(process.cwd(), ".env");
-
-    let content = "";
-    try {
-      content = fs.readFileSync(envPath, "utf8");
-    } catch {
-      content = "";
-    }
-
-    const regex = new RegExp(`^${data.key}=.*$`, "m");
-    const line = `${data.key}=${data.value}`;
-    content = regex.test(content)
-      ? content.replace(regex, line)
-      : content.trimEnd() + `\n${line}\n`;
-
-    fs.writeFileSync(envPath, content, "utf8");
+    // Update the running process immediately (works on read-only filesystems too)
     process.env[data.key] = data.value;
+
+    // Best-effort persist to .env file — silently skip on read-only fs (e.g. Render)
+    try {
+      const fs = await import("fs");
+      const path = await import("path");
+      const envPath = path.resolve(process.cwd(), ".env");
+      let content = "";
+      try { content = fs.readFileSync(envPath, "utf8"); } catch { content = ""; }
+      const regex = new RegExp(`^${data.key}=.*$`, "m");
+      const line = `${data.key}=${data.value}`;
+      content = regex.test(content)
+        ? content.replace(regex, line)
+        : content.trimEnd() + `\n${line}\n`;
+      fs.writeFileSync(envPath, content, "utf8");
+    } catch { /* read-only filesystem — process.env already updated above */ }
 
     return { success: true };
   });
