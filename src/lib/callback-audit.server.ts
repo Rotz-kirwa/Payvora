@@ -191,7 +191,9 @@ export async function readAndAuditCallbackRequest(
       )
       returning id
     `);
-    const auditId = Array.isArray(inserted) ? String(inserted[0]?.id ?? "") : "";
+    // postgres.js returns an array-like Result; rows can be on .rows or the result itself
+    const rows = Array.isArray(inserted) ? inserted : ((inserted as { rows?: unknown[] }).rows ?? []);
+    const auditId = rows.length > 0 ? String((rows[0] as { id?: string })?.id ?? "") : "";
     return { auditId: auditId || null, body, rawBody, parseError };
   } catch (error) {
     console.error("[callback-audit] Failed to record callback event:", error);
