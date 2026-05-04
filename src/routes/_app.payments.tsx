@@ -21,6 +21,18 @@ const KES = (n: number | string) =>
     maximumFractionDigits: 0,
   }).format(Number(n));
 
+// Safaricom sends obfuscated MSISDNs for Buy Goods privacy — show masked if not a real Kenyan number
+function formatPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("254") && digits.length === 12) {
+    return `+254 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
+  }
+  if (digits.length > 15) {
+    return `•••• ${digits.slice(-4)}`;
+  }
+  return phone;
+}
+
 const STATUS_STYLES: Record<MpesaStatus, string> = {
   Success: "bg-success/10 text-success",
   Pending: "bg-warning/10 text-warning",
@@ -179,13 +191,12 @@ const [sortDesc, setSortDesc] = useState(true);
   const slice = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const exportCsv = () => {
-    const headers = ["Payer", "Phone", "Amount", "Reference", "Receipt", "Status", "Date"];
+    const headers = ["Payer", "Phone", "Receipt", "Amount", "Status", "Date"];
     const rows = filtered.map((p) => [
       p.payerName ?? "",
-      p.phone,
-      p.amount,
-      p.accountReference ?? "",
+      formatPhone(p.phone),
       p.mpesaReceiptNumber ?? "",
+      p.amount,
       p.status,
       p.createdAt,
     ]);
@@ -310,7 +321,6 @@ const [sortDesc, setSortDesc] = useState(true);
               <tr className="border-b border-border bg-secondary/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="px-6 py-3 font-medium">Payer</th>
                 <th className="px-6 py-3 font-medium">Phone</th>
-                <th className="px-6 py-3 font-medium">Reference</th>
                 <th className="px-6 py-3 font-medium">Receipt</th>
                 <th className="px-6 py-3 font-medium">
                   <button
@@ -335,8 +345,7 @@ const [sortDesc, setSortDesc] = useState(true);
               {slice.map((p) => (
                 <tr key={p.id} className="transition-colors hover:bg-secondary/40">
                   <td className="px-6 py-3.5 font-medium">{p.payerName ?? "—"}</td>
-                  <td className="px-6 py-3.5 text-muted-foreground">{p.phone}</td>
-                  <td className="px-6 py-3.5 text-muted-foreground">{p.accountReference ?? "—"}</td>
+                  <td className="px-6 py-3.5 text-muted-foreground">{formatPhone(p.phone)}</td>
                   <td className="px-6 py-3.5 font-mono text-xs">{p.mpesaReceiptNumber ?? "—"}</td>
                   <td className="px-6 py-3.5 font-semibold">{KES(p.amount)}</td>
                   <td className="px-6 py-3.5">
@@ -354,7 +363,7 @@ const [sortDesc, setSortDesc] = useState(true);
               ))}
               {slice.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center text-sm text-muted-foreground">
+                  <td colSpan={6} className="px-6 py-16 text-center text-sm text-muted-foreground">
                     {payments.length === 0
                       ? "No payments yet. Payments made directly to the till number will appear here automatically."
                       : "No payments match your search."}

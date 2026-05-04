@@ -193,10 +193,12 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
   const mpesaReceiptNumber = parseString(body.TransID);
   const phone = normalizePhone(body.MSISDN);
   const amount = parseAmount(body.TransAmount);
+  // Safaricom sends LastName or Surname depending on API version
+  const lastName = parseString(body.LastName) ?? parseString(body.Surname);
   const payerName = [
     parseString(body.FirstName),
     parseString(body.MiddleName),
-    parseString(body.LastName),
+    lastName,
   ]
     .filter(Boolean)
     .join(" ") || null;

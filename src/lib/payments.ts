@@ -7,6 +7,7 @@ export type MpesaPayment = {
   source: "stk_push" | "c2b_till";
   status: "Pending" | "Success" | "Failed" | "Cancelled";
   phone: string;
+  payerName: string | null;
   amount: string;
   businessShortcode: string | null;
   tillNumber: string | null;
