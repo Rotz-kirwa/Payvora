@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull } from "drizzle-orm";
+import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { getCurrentUser, requireCurrentUser } from "./auth.server";
 import { db } from "./db/client";
 import { mpesaPayments } from "./db/schema";
@@ -6,6 +6,13 @@ import { normalizeKenyanPhone, queryStkPushStatus, stkPush } from "./mpesa.serve
 
 const STK_SHORTCODE = process.env.MPESA_SHORTCODE?.trim() ?? "6270336";
 const STK_TILL_NUMBER = process.env.MPESA_TILL_NUMBER?.trim() ?? "895858";
+
+let schemaEnsured = false;
+async function ensureSchema() {
+  if (schemaEnsured) return;
+  await db.execute(sql`ALTER TABLE mpesa_payments ADD COLUMN IF NOT EXISTS payer_name TEXT`);
+  schemaEnsured = true;
+}
 
 function getReconciledStatus(resultCode: number, resultDesc: string | null) {
   if (resultCode === 0) return "Success" as const;
@@ -90,6 +97,8 @@ export async function reconcilePendingStkPayments(limit = 20) {
 export async function fetchPayments() {
   const user = await getCurrentUser();
   if (!user) return [];
+
+  await ensureSchema();
 
   return db
     .select({
