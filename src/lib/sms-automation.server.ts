@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, lte, ne } from "drizzle-orm";
+import { and, count, desc, eq, gte, ne, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { appSettings, smsAutomationRules, smsLogs } from "./db/schema";
 import { sendSms } from "./sms.server";
@@ -105,8 +105,8 @@ export async function findOverlappingActiveRules(
 ): Promise<RuleRow[]> {
   const conditions = [
     eq(smsAutomationRules.isActive, true),
-    lte(smsAutomationRules.minAmount, String(maxAmount)),
-    gte(smsAutomationRules.maxAmount, String(minAmount)),
+    sql`${smsAutomationRules.minAmount}::numeric <= ${maxAmount}::numeric`,
+    sql`${smsAutomationRules.maxAmount}::numeric >= ${minAmount}::numeric`,
   ];
   if (excludeId) conditions.push(ne(smsAutomationRules.id, excludeId));
 
@@ -297,6 +297,13 @@ export async function fetchLogStats(): Promise<{
   };
 }
 
+// ─── Phone validation ─────────────────────────────────────────────────────────
+
+// Valid Kenyan number: 254 followed by 7 or 1, then 8 digits (12 total)
+function isValidKenyanPhone(phone: string): boolean {
+  return /^254[17]\d{8}$/.test(phone.replace(/\D/g, ""));
+}
+
 // ─── Core automation: called after every C2B payment ─────────────────────────
 
 export async function processPaymentSms(params: {
@@ -308,6 +315,8 @@ export async function processPaymentSms(params: {
 }): Promise<void> {
   const { paymentId, phone, amount, transactionCode, paidAt } = params;
 
+  console.log(`[sms-automation] START paymentId=${paymentId} amount=${amount} phone=${phone.slice(0, 8)}...`);
+
   // 1. Global toggle
   const enabled = await getSmsAutomationEnabled();
   if (!enabled) {
@@ -315,15 +324,34 @@ export async function processPaymentSms(params: {
     return;
   }
 
-  // 2. Find matching active rule (first by min_amount)
+  // 2. Validate phone — Safaricom hashes the MSISDN for C2B Buy Goods.
+  //    A hashed phone cannot be delivered to; log as failed so it's visible.
+  if (!isValidKenyanPhone(phone)) {
+    console.log(
+      `[sms-automation] Phone is not a valid Kenyan number (likely Safaricom MSISDN hash). SMS cannot be delivered. paymentId=${paymentId}`,
+    );
+    await db.insert(smsLogs).values({
+      paymentId,
+      ruleId: null,
+      phone,
+      amount: String(amount),
+      message: "",
+      status: "failed",
+      errorMessage:
+        "MSISDN unavailable: Safaricom hashes the customer phone in C2B Buy Goods callbacks. Real number cannot be recovered.",
+    });
+    return;
+  }
+
+  // 3. Find matching active rule — use explicit numeric cast to avoid implicit text comparison
   const [matchedRule] = await db
     .select()
     .from(smsAutomationRules)
     .where(
       and(
         eq(smsAutomationRules.isActive, true),
-        lte(smsAutomationRules.minAmount, String(amount)),
-        gte(smsAutomationRules.maxAmount, String(amount)),
+        sql`${smsAutomationRules.minAmount}::numeric <= ${amount}::numeric`,
+        sql`${smsAutomationRules.maxAmount}::numeric >= ${amount}::numeric`,
       ),
     )
     .orderBy(smsAutomationRules.minAmount)
@@ -334,7 +362,9 @@ export async function processPaymentSms(params: {
     return;
   }
 
-  // 3. Build message
+  console.log(`[sms-automation] Matched rule "${matchedRule.name}" (${matchedRule.minAmount}–${matchedRule.maxAmount}) for amount ${amount}`);
+
+  // 4. Build message
   const message = resolvePlaceholders(matchedRule.messageTemplate, {
     phone,
     amount,
@@ -342,7 +372,9 @@ export async function processPaymentSms(params: {
     date: paidAt,
   });
 
-  // 4. Insert pending log first
+  console.log(`[sms-automation] Message: "${message.slice(0, 80)}${message.length > 80 ? "…" : ""}"`);
+
+  // 5. Insert pending log first (so we always have a record even if send crashes)
   const [logRow] = await db
     .insert(smsLogs)
     .values({
@@ -355,10 +387,10 @@ export async function processPaymentSms(params: {
     })
     .returning({ id: smsLogs.id });
 
-  // 5. Send SMS (never throws — errors are caught inside sendSms)
+  // 6. Send SMS (sendSms never throws — all errors are caught inside)
   const result = await sendSms(phone, message);
 
-  // 6. Update log with result
+  // 7. Update log with final result
   await db
     .update(smsLogs)
     .set({
@@ -369,7 +401,7 @@ export async function processPaymentSms(params: {
     .where(eq(smsLogs.id, logRow.id));
 
   console.log(
-    `[sms-automation] SMS ${result.success ? "sent" : "failed"} for payment ${paymentId} (rule: ${matchedRule.name})`,
+    `[sms-automation] SMS ${result.success ? "SENT ✓" : `FAILED ✗ (${result.error})`} — paymentId=${paymentId} rule="${matchedRule.name}" phone=${phone}`,
   );
 }
 
