@@ -28,6 +28,7 @@ export const mpesaPayments = pgTable("mpesa_payments", {
     .notNull()
     .default("Pending"),
   phone: text("phone").notNull(),
+  payerName: text("payer_name"),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull().default("0"),
   businessShortcode: text("business_shortcode"),
   tillNumber: text("till_number"),

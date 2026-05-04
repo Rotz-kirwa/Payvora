@@ -160,6 +160,7 @@ const [sortDesc, setSortDesc] = useState(true);
       if (!q) return true;
       return (
         p.phone.toLowerCase().includes(q) ||
+        (p.payerName?.toLowerCase().includes(q) ?? false) ||
         (p.mpesaReceiptNumber?.toLowerCase().includes(q) ?? false) ||
         (p.accountReference?.toLowerCase().includes(q) ?? false) ||
         (p.checkoutRequestId?.toLowerCase().includes(q) ?? false)
@@ -178,8 +179,9 @@ const [sortDesc, setSortDesc] = useState(true);
   const slice = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const exportCsv = () => {
-    const headers = ["Phone", "Amount", "Reference", "Receipt", "Status", "Date"];
+    const headers = ["Payer", "Phone", "Amount", "Reference", "Receipt", "Status", "Date"];
     const rows = filtered.map((p) => [
+      p.payerName ?? "",
       p.phone,
       p.amount,
       p.accountReference ?? "",
@@ -296,7 +298,7 @@ const [sortDesc, setSortDesc] = useState(true);
                 setQuery(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search phone, receipt or reference…"
+              placeholder="Search name, phone, receipt or reference…"
               className="h-10 w-full rounded-lg border border-border bg-background pl-10 pr-4 text-sm outline-none focus:border-primary"
             />
           </div>
@@ -306,6 +308,7 @@ const [sortDesc, setSortDesc] = useState(true);
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <th className="px-6 py-3 font-medium">Payer</th>
                 <th className="px-6 py-3 font-medium">Phone</th>
                 <th className="px-6 py-3 font-medium">Reference</th>
                 <th className="px-6 py-3 font-medium">Receipt</th>
@@ -331,7 +334,8 @@ const [sortDesc, setSortDesc] = useState(true);
             <tbody className="divide-y divide-border">
               {slice.map((p) => (
                 <tr key={p.id} className="transition-colors hover:bg-secondary/40">
-                  <td className="px-6 py-3.5 font-medium">{p.phone}</td>
+                  <td className="px-6 py-3.5 font-medium">{p.payerName ?? "—"}</td>
+                  <td className="px-6 py-3.5 text-muted-foreground">{p.phone}</td>
                   <td className="px-6 py-3.5 text-muted-foreground">{p.accountReference ?? "—"}</td>
                   <td className="px-6 py-3.5 font-mono text-xs">{p.mpesaReceiptNumber ?? "—"}</td>
                   <td className="px-6 py-3.5 font-semibold">{KES(p.amount)}</td>
@@ -350,7 +354,7 @@ const [sortDesc, setSortDesc] = useState(true);
               ))}
               {slice.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-16 text-center text-sm text-muted-foreground">
                     {payments.length === 0
                       ? "No payments yet. Payments made directly to the till number will appear here automatically."
                       : "No payments match your search."}

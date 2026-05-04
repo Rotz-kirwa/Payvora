@@ -97,6 +97,7 @@ export async function fetchPayments() {
       source: mpesaPayments.source,
       status: mpesaPayments.status,
       phone: mpesaPayments.phone,
+      payerName: mpesaPayments.payerName,
       amount: mpesaPayments.amount,
       businessShortcode: mpesaPayments.businessShortcode,
       tillNumber: mpesaPayments.tillNumber,

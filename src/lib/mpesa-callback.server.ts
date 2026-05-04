@@ -1,7 +1,16 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { mpesaPayments } from "./db/schema";
 import { processPaymentSms } from "./sms-automation.server";
+
+let payerNameColumnEnsured = false;
+async function ensurePayerNameColumn() {
+  if (payerNameColumnEnsured) return;
+  await db.execute(sql`
+    ALTER TABLE mpesa_payments ADD COLUMN IF NOT EXISTS payer_name TEXT
+  `);
+  payerNameColumnEnsured = true;
+}
 
 type CallbackResult = { ResultCode: number; ResultDesc: string };
 type MpesaStatus = "Pending" | "Success" | "Failed" | "Cancelled";
@@ -177,11 +186,20 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
     throw new Error("Invalid C2B confirmation body");
   }
 
+  await ensurePayerNameColumn();
+
   console.log("[handleC2bConfirmation] Received callback:", sanitizeC2bBody(body));
 
   const mpesaReceiptNumber = parseString(body.TransID);
   const phone = normalizePhone(body.MSISDN);
   const amount = parseAmount(body.TransAmount);
+  const payerName = [
+    parseString(body.FirstName),
+    parseString(body.MiddleName),
+    parseString(body.LastName),
+  ]
+    .filter(Boolean)
+    .join(" ") || null;
 
   if (!mpesaReceiptNumber || !phone || amount === null) {
     throw new Error("C2B confirmation is missing TransID, MSISDN, or TransAmount");
@@ -205,6 +223,7 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
       source: "c2b_till",
       status: "Success",
       phone,
+      payerName,
       amount: formatAmount(amount ?? 0),
       tillNumber,
       businessShortcode,
