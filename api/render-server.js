@@ -45,8 +45,17 @@ const app = http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url, "http://localhost");
   const isApi = pathname.startsWith("/api/");
 
+  const ip =
+    req.headers["cf-connecting-ip"] ??
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ??
+    req.headers["x-real-ip"] ??
+    req.socket?.remoteAddress ??
+    "-";
+
   if (req.method !== "GET" || isApi) {
-    console.log(`[req] ${req.method} ${pathname}`);
+    console.log(
+      `[req] ${req.method} ${pathname} | ip=${ip} | ua=${req.headers["user-agent"] ?? "-"} | ct=${req.headers["content-type"] ?? "-"}`,
+    );
   }
 
   try {
@@ -94,7 +103,9 @@ const app = http.createServer(async (req, res) => {
     res.end(Buffer.from(await response.arrayBuffer()));
 
     if (req.method !== "GET" || isApi) {
-      console.log(`[res] ${req.method} ${pathname} → ${response.status} (${Date.now() - start}ms)`);
+      console.log(
+        `[res] ${req.method} ${pathname} → ${response.status} (${Date.now() - start}ms) | ip=${ip}`,
+      );
     }
   } catch (error) {
     console.error("[render-server]", error);

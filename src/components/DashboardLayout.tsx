@@ -10,6 +10,7 @@ import {
   Bell,
   X,
   Bot,
+  Bug,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ const NAV = [
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/sms-automation", label: "SMS Automation", icon: Bot },
   { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/debug", label: "System Debug", icon: Bug },
 ] as const;
 
 export function DashboardLayout() {
