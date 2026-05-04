@@ -21,14 +21,15 @@ const KES = (n: number | string) =>
     maximumFractionDigits: 0,
   }).format(Number(n));
 
-// Safaricom sends obfuscated MSISDNs for Buy Goods privacy — show masked if not a real Kenyan number
+// Safaricom hashes the MSISDN (SHA-256 hex) for Buy Goods privacy — show "Private" for those
 function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   if (digits.startsWith("254") && digits.length === 12) {
     return `+254 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
   }
-  if (digits.length > 15) {
-    return `•••• ${digits.slice(-4)}`;
+  // Hashed MSISDN: contains hex letters or way too many digits
+  if (/[a-fA-F]/.test(phone) || digits.length > 15) {
+    return "Private";
   }
   return phone;
 }
