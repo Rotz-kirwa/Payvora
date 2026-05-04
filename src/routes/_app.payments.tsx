@@ -21,15 +21,16 @@ const KES = (n: number | string) =>
     maximumFractionDigits: 0,
   }).format(Number(n));
 
-// Safaricom hashes the MSISDN (SHA-256 hex) for Buy Goods privacy — show "Private" for those
+// Safaricom sends a SHA-256 hash of the phone for Buy Goods privacy — the real number is unrecoverable
 function formatPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   if (digits.startsWith("254") && digits.length === 12) {
     return `+254 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`;
   }
-  // Hashed MSISDN: contains hex letters or way too many digits
+  // Hashed MSISDN: show a short consistent ID so you can match repeat customers
   if (/[a-fA-F]/.test(phone) || digits.length > 15) {
-    return "Private";
+    const id = phone.slice(-8).toUpperCase();
+    return `M-Pesa ···${id}`;
   }
   return phone;
 }
@@ -185,7 +186,7 @@ const [sortDesc, setSortDesc] = useState(true);
       return sortDesc ? bv - av : av - bv;
     });
     return list;
-  }, [payments, query, status, sortBy, sortDesc]);
+  }, [payments, query, sortBy, sortDesc]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
