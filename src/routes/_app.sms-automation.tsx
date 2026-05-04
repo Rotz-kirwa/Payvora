@@ -84,8 +84,6 @@ const toggleRuleFn = createServerFn({ method: "POST" })
 const testSmsFn = createServerFn({ method: "POST" })
   .inputValidator((v: unknown) => z.object({ ruleId: z.string(), phone: z.string().min(9) }).parse(v))
   .handler(async ({ data }) => {
-    const { requireCurrentUser } = await import("../lib/auth.server");
-    await requireCurrentUser();
     const { sendTestSms } = await import("../lib/sms-automation.server");
     const result = await sendTestSms(data.ruleId, data.phone);
     return { success: result.success, message: result.message, error: result.error ?? null };
