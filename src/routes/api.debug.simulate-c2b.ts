@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/debug/simulate-c2b")({
           TransID: String(body.TransID ?? transId),
           TransTime: new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14),
           TransAmount: String(body.TransAmount ?? "1.00"),
-          BusinessShortCode: String(body.BusinessShortCode ?? process.env.MPESA_SHORTCODE ?? "6270335"),
+          BusinessShortCode: String(body.BusinessShortCode ?? process.env.MPESA_SHORTCODE ?? "6270336"),
           BillRefNumber: String(body.BillRefNumber ?? "simulate-c2b"),
           MSISDN: String(body.MSISDN ?? "254700000000"),
           FirstName: String(body.FirstName ?? "Simulate"),

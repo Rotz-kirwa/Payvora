@@ -21,7 +21,7 @@ export const Route = createFileRoute("/api/debug/test-payment")({
               .replace(/[^0-9]/g, "")
               .slice(0, 14),
             TransAmount: "1.00",
-            BusinessShortCode: process.env.MPESA_SHORTCODE ?? "6270335",
+            BusinessShortCode: process.env.MPESA_SHORTCODE ?? "6270336",
             BillRefNumber: "debug-test",
             MSISDN: "254700000000",
             FirstName: "Debug",

@@ -4,7 +4,7 @@ import { db } from "./db/client";
 import { mpesaPayments } from "./db/schema";
 import { normalizeKenyanPhone, queryStkPushStatus, stkPush } from "./mpesa.server";
 
-const STK_SHORTCODE = process.env.MPESA_SHORTCODE?.trim() ?? "6270335";
+const STK_SHORTCODE = process.env.MPESA_SHORTCODE?.trim() ?? "6270336";
 const STK_TILL_NUMBER = process.env.MPESA_TILL_NUMBER?.trim() ?? "895858";
 
 function getReconciledStatus(resultCode: number, resultDesc: string | null) {

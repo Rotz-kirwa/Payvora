@@ -4,7 +4,7 @@ const BASE =
     : "https://sandbox.safaricom.co.ke";
 
 // Store number used for Buy Goods STK Push.
-const STORE_NUMBER = process.env.MPESA_SHORTCODE?.trim() ?? "6270335";
+const STORE_NUMBER = process.env.MPESA_SHORTCODE?.trim() ?? "6270336";
 // Till number that actually receives Buy Goods payments.
 const TILL_NUMBER = process.env.MPESA_TILL_NUMBER?.trim() ?? "895858";
 
@@ -147,7 +147,7 @@ export async function queryStkPushStatus(checkoutRequestId: string): Promise<Stk
 
 export async function registerC2bUrls() {
   const callbackUrl = process.env.MPESA_CALLBACK_URL?.trim();
-  // Safaricom confirmed: register under the store number, not the till number.
+  // Safaricom confirmed: use store number 6270336 (not HO shortcode 6270335 — HO doesn't support C2B).
   const shortCode = process.env.MPESA_SHORTCODE?.trim() ?? STORE_NUMBER;
 
   if (!callbackUrl) throw new Error("MPESA_CALLBACK_URL must be set");
