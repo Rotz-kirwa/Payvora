@@ -59,7 +59,7 @@ export function DashboardLayout() {
           "fixed inset-y-0 left-0 z-40 flex w-64 flex-col transition-transform md:static md:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
-        style={{ background: "var(--gradient-sidebar)" }}
+        style={{ background: "var(--sidebar)", borderRight: "1px solid var(--sidebar-border)" }}
       >
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-5 shrink-0">
@@ -138,7 +138,7 @@ export function DashboardLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col min-w-0">
         {/* Top header */}
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border bg-white/80 px-4 backdrop-blur-md md:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-border bg-card/95 px-4 backdrop-blur-md md:px-8">
           <button
             onClick={() => setSidebarOpen(true)}
             className="rounded-lg p-2 text-muted-foreground hover:bg-secondary md:hidden"

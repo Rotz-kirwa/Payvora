@@ -37,7 +37,7 @@ const RANGES = [
   { label: "Last 90 days", days: 90 },
 ] as const;
 
-const COLORS = ["oklch(0.48 0.18 274)", "oklch(0.65 0.16 155)", "oklch(0.78 0.15 75)"];
+const COLORS = ["oklch(0.62 0.13 183)", "oklch(0.65 0.18 38)", "oklch(0.55 0.20 263)"];
 
 function startOfDay(d: Date) {
   const x = new Date(d);
@@ -121,16 +121,16 @@ function AnalyticsPage() {
             {chartsReady ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data} margin={{ left: -12, right: 8, top: 8, bottom: 0 }}>
-                  <CartesianGrid stroke="oklch(0.92 0.01 260)" vertical={false} />
+                  <CartesianGrid stroke="oklch(1 0 0 / 7%)" vertical={false} />
                   <XAxis
                     dataKey="label"
-                    stroke="oklch(0.5 0.025 260)"
+                    stroke="oklch(0.55 0.02 255)"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
                   />
                   <YAxis
-                    stroke="oklch(0.5 0.025 260)"
+                    stroke="oklch(0.55 0.02 255)"
                     fontSize={11}
                     tickLine={false}
                     axisLine={false}
@@ -139,7 +139,9 @@ function AnalyticsPage() {
                   <Tooltip
                     contentStyle={{
                       borderRadius: 12,
-                      border: "1px solid oklch(0.92 0.01 260)",
+                      border: "1px solid oklch(1 0 0 / 10%)",
+                      background: "oklch(0.16 0.025 250)",
+                      color: "oklch(0.95 0.005 250)",
                       fontSize: 12,
                     }}
                     formatter={(v) => KES(Number(v))}
@@ -147,10 +149,10 @@ function AnalyticsPage() {
                   <Line
                     type="monotone"
                     dataKey="revenue"
-                    stroke="oklch(0.48 0.18 274)"
+                    stroke="oklch(0.62 0.13 183)"
                     strokeWidth={2.5}
                     dot={false}
-                    activeDot={{ r: 5 }}
+                    activeDot={{ r: 5, fill: "oklch(0.62 0.13 183)" }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -190,7 +192,9 @@ function AnalyticsPage() {
                       formatter={(v) => KES(Number(v))}
                       contentStyle={{
                         borderRadius: 12,
-                        border: "1px solid oklch(0.92 0.01 260)",
+                        border: "1px solid oklch(1 0 0 / 10%)",
+                        background: "oklch(0.16 0.025 250)",
+                        color: "oklch(0.95 0.005 250)",
                         fontSize: 12,
                       }}
                     />
