@@ -300,7 +300,7 @@ export async function fetchLogStats(): Promise<{
 // ─── Phone validation ─────────────────────────────────────────────────────────
 
 // Valid Kenyan number: 254 followed by 7 or 1, then 8 digits (12 total)
-function isValidKenyanPhone(phone: string): boolean {
+export function isValidKenyanPhone(phone: string): boolean {
   return /^254[17]\d{8}$/.test(phone.replace(/\D/g, ""));
 }
 

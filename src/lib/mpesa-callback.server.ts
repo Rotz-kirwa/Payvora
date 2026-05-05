@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { mpesaPayments } from "./db/schema";
-import { processPaymentSms } from "./sms-automation.server";
+import { processPaymentSms, isValidKenyanPhone } from "./sms-automation.server";
 
 let payerNameColumnEnsured = false;
 async function ensurePayerNameColumn() {
@@ -157,6 +157,8 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
 
   const transactionDate = parseMpesaDate(getItemValue("TransactionDate"));
 
+  const paidAt = transactionDate ?? now;
+
   const updated = await db
     .update(mpesaPayments)
     .set({
@@ -167,16 +169,35 @@ export async function handleStkCallback(body: unknown): Promise<CallbackResult> 
       mpesaReceiptNumber,
       rawCallbackJson,
       updatedAt: now,
-      ...(status === "Success" ? { paidAt: transactionDate ?? now } : {}),
+      ...(status === "Success" ? { paidAt } : {}),
     })
     .where(eq(mpesaPayments.checkoutRequestId, checkoutRequestId))
-    .returning({ id: mpesaPayments.id, status: mpesaPayments.status });
+    .returning({
+      id: mpesaPayments.id,
+      status: mpesaPayments.status,
+      phone: mpesaPayments.phone,
+      amount: mpesaPayments.amount,
+    });
 
   console.log("[handleStkCallback] DB update result:", {
     checkoutRequestId,
     updated: updated.length,
     status,
   });
+
+  // Trigger SMS automation for successful STK push payments (phone is always known here)
+  if (status === "Success" && updated[0]) {
+    const p = updated[0];
+    processPaymentSms({
+      paymentId: p.id,
+      phone: p.phone,
+      amount: Number(p.amount),
+      transactionCode: mpesaReceiptNumber,
+      paidAt,
+    }).catch((err) => {
+      console.error("[sms-automation] STK Push SMS trigger failed:", err);
+    });
+  }
 
   return accepted();
 }
@@ -212,6 +233,15 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
     parseString(body.BillRefNumber) ??
     parseString(body.InvoiceNumber) ??
     parseString(body.AccountReference);
+
+  // Safaricom hashes the MSISDN for Buy Goods. If BillRefNumber looks like a phone
+  // (some customers type their number as the reference), use it as the SMS target.
+  const billRefPhone = normalizePhone(body.BillRefNumber);
+  const smsPhone = isValidKenyanPhone(phone ?? "")
+    ? phone!
+    : isValidKenyanPhone(billRefPhone ?? "")
+      ? billRefPhone!
+      : phone ?? "";
   const paidAt = parseMpesaDate(body.TransTime) ?? now;
   const rawCallbackJson = body;
   // For Buy Goods: BusinessShortCode in callback = the till number; store is the parent
@@ -262,7 +292,7 @@ export async function handleC2bConfirmation(body: unknown): Promise<CallbackResu
   if (inserted?.id && amount != null) {
     processPaymentSms({
       paymentId: inserted.id,
-      phone,
+      phone: smsPhone,
       amount,
       transactionCode: mpesaReceiptNumber,
       paidAt,
