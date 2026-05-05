@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
@@ -15,11 +15,11 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate({ to: "/", replace: true });
-    }
+    setMounted(true);
+    if (isAuthenticated) navigate({ to: "/", replace: true });
   }, [isAuthenticated, navigate]);
 
   const submit = async (e: { preventDefault(): void }) => {
@@ -38,7 +38,7 @@ function LoginPage() {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center p-4"
+      className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden"
       style={{
         backgroundImage: "url('https://i.pinimg.com/736x/91/7d/a4/917da4ebb7424c3f6dc4892470178976.jpg')",
         backgroundSize: "cover",
@@ -46,73 +46,152 @@ function LoginPage() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Dark overlay so the card stays readable */}
-      <div className="absolute inset-0 bg-black/50" />
-      <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-[var(--shadow-glow)]">
+      {/* Layered overlays for depth */}
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
+
+      {/* Animated card wrapper */}
+      <div
+        className="relative z-10 w-full max-w-sm transition-all duration-700"
+        style={{
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? "translateY(0)" : "translateY(28px)",
+        }}
+      >
+        {/* Logo + brand */}
+        <div className="mb-8 flex flex-col items-center gap-3">
+          <div
+            className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10"
+            style={{
+              transition: "transform 0.3s ease",
+            }}
+          >
             <img src="/favicon.jpg" alt="Paykit" className="h-full w-full object-cover" />
           </div>
-          <span className="text-xl font-semibold tracking-tight">Paykit</span>
+          <div className="text-center">
+            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Paykit</h2>
+            <p className="text-xs text-white/50 tracking-widest uppercase mt-0.5">Admin Portal</p>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-[var(--shadow-lg)]">
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your admin dashboard.</p>
+        {/* Glass card */}
+        <div
+          className="rounded-3xl p-8 shadow-2xl"
+          style={{
+            background: "rgba(10, 15, 25, 0.82)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 32px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}
+        >
+          <div className="mb-7 text-center">
+            <h1 className="text-2xl font-bold tracking-tight text-white">Welcome back</h1>
+            <p className="mt-1.5 text-sm text-white/50">Sign in to continue to your dashboard</p>
+          </div>
 
-          <form onSubmit={submit} className="mt-6 space-y-4">
-            <div>
-              <label className="text-sm font-medium" htmlFor="email">
+          <form onSubmit={submit} className="space-y-4">
+            {/* Email field */}
+            <div className="group">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50" htmlFor="email">
                 Email
               </label>
-              <input
-                id="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-primary"
-              />
+              <div className="relative">
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.09)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(20,184,166,0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium" htmlFor="password">
+            {/* Password field */}
+            <div className="group">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50" htmlFor="password">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-primary"
-              />
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.09)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(20,184,166,0.12)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
+                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+              </div>
             </div>
 
             {error && (
-              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-red-400"
+                style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.20)" }}>
                 {error}
-              </p>
+              </div>
             )}
 
             <button
               type="submit"
               disabled={loading || !email || !password}
-              style={{ background: "var(--gradient-primary)" }}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white shadow-[var(--shadow-md)] transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="relative mt-2 h-12 w-full overflow-hidden rounded-xl text-sm font-bold tracking-wide text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+              style={{ background: "linear-gradient(135deg, oklch(0.50 0.11 183), oklch(0.62 0.15 183))" }}
             >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {loading ? "Signing in…" : "Sign in"}
+              {/* Shimmer overlay */}
+              <span className="pointer-events-none absolute inset-0 rounded-xl"
+                style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)" }} />
+              <span className="relative flex items-center justify-center gap-2">
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {loading ? "Signing in…" : "Sign in"}
+              </span>
             </button>
           </form>
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          MOBOSOFT ENTERPRISE HQ &nbsp;·&nbsp; Paykit Admin
-        </p>
+        {/* Bottom brand text — bigger */}
+        <div className="mt-8 text-center">
+          <p className="text-base font-semibold tracking-widest text-white/70 uppercase">
+            MOBOSOFT ENTERPRISE HQ
+          </p>
+          <p className="mt-1 text-sm tracking-widest text-white/40 uppercase">
+            Paykit Admin
+          </p>
+        </div>
       </div>
     </div>
   );
