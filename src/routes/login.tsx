@@ -47,6 +47,19 @@ function LoginPage() {
         backgroundRepeat: "no-repeat",
       }}
     >
+      {/* Suppress browser built-in password reveal / autofill overlay icons */}
+      <style>{`
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear,
+        input::-webkit-credentials-auto-fill-button,
+        input::-webkit-strong-password-auto-fill-button,
+        input::-webkit-contacts-auto-fill-button {
+          display: none !important;
+          visibility: hidden !important;
+          pointer-events: none !important;
+        }
+      `}</style>
+
       {/* Layered overlays for depth */}
       <div className="absolute inset-0 bg-black/60" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70" />
@@ -61,12 +74,7 @@ function LoginPage() {
       >
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div
-            className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10"
-            style={{
-              transition: "transform 0.3s ease",
-            }}
-          >
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10">
             <img src="/favicon.jpg" alt="Paykit" className="h-full w-full object-cover" />
           </div>
           <div className="text-center">
@@ -108,10 +116,7 @@ function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.10)",
-                  }}
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
                   onFocus={(e) => {
                     e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.09)";
@@ -141,11 +146,8 @@ function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 w-full rounded-xl pl-10 pr-11 text-sm text-white outline-none transition-all placeholder:text-white/25"
-                  style={{
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.10)",
-                  }}
+                  className="h-12 w-full rounded-xl pl-10 pr-12 text-sm text-white outline-none transition-all placeholder:text-white/25"
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
                   onFocus={(e) => {
                     e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
                     e.currentTarget.style.background = "rgba(255,255,255,0.09)";
@@ -160,18 +162,20 @@ function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 transition-colors hover:text-white/70"
+                  className="absolute right-0 top-0 flex h-12 w-12 items-center justify-center rounded-r-xl text-white/50 transition-colors hover:text-white"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-red-400"
-                style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.20)" }}>
+              <div
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm text-red-400"
+                style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.20)" }}
+              >
                 {error}
               </div>
             )}
@@ -182,7 +186,6 @@ function LoginPage() {
               className="relative mt-2 h-12 w-full overflow-hidden rounded-xl text-sm font-bold tracking-wide text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
               style={{ background: "linear-gradient(135deg, oklch(0.50 0.11 183), oklch(0.62 0.15 183))" }}
             >
-              {/* Shimmer overlay */}
               <span className="pointer-events-none absolute inset-0 rounded-xl"
                 style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)" }} />
               <span className="relative flex items-center justify-center gap-2">
@@ -193,7 +196,7 @@ function LoginPage() {
           </form>
         </div>
 
-        {/* Bottom brand text — bigger */}
+        {/* Bottom brand text */}
         <div className="mt-8 text-center">
           <p className="text-base font-semibold tracking-widest text-white/70 uppercase">
             MOBOSOFT ENTERPRISE HQ
