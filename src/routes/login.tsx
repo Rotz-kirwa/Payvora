@@ -136,43 +136,45 @@ function LoginPage() {
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50" htmlFor="password">
                 Password
               </label>
-              <div className="relative">
-                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="h-12 w-full rounded-xl pl-10 pr-14 text-sm text-white outline-none transition-all placeholder:text-white/25"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.09)";
-                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(20,184,166,0.12)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
-                    e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                />
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30 transition-colors group-focus-within:text-primary" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="h-12 w-full rounded-xl pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-white/25"
+                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.09)";
+                      e.currentTarget.style.boxShadow = "0 0 0 3px rgba(20,184,166,0.12)";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)";
+                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110 active:scale-95"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all hover:scale-105 active:scale-95"
                   style={{
-                    background: showPassword ? "rgba(20,184,166,0.25)" : "rgba(255,255,255,0.10)",
-                    color: showPassword ? "rgb(20,184,166)" : "rgba(255,255,255,0.75)",
-                    border: showPassword ? "1px solid rgba(20,184,166,0.4)" : "1px solid rgba(255,255,255,0.15)",
-                    boxShadow: showPassword ? "0 0 8px rgba(20,184,166,0.3)" : "none",
+                    background: showPassword ? "rgba(20,184,166,0.30)" : "rgba(255,255,255,0.10)",
+                    color: showPassword ? "rgb(20,184,166)" : "rgba(255,255,255,0.85)",
+                    border: showPassword ? "1px solid rgba(20,184,166,0.5)" : "1px solid rgba(255,255,255,0.18)",
+                    boxShadow: showPassword ? "0 0 12px rgba(20,184,166,0.35)" : "none",
                   }}
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
