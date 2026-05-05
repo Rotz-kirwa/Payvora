@@ -105,10 +105,10 @@ function dailySeries(payments: MpesaPayment[], days: number) {
 }
 
 const STATUS_COLORS = {
-  Success: "#7C3AED",
-  Pending: "#F59E0B",
-  Failed: "#EF4444",
-  Cancelled: "#9CA3AF",
+  Success: "#14b8a6",
+  Pending: "#f59e0b",
+  Failed: "#ef4444",
+  Cancelled: "#6b7280",
 };
 
 function DashboardPage() {
@@ -205,46 +205,56 @@ function DashboardPage() {
           <div className="h-64">
             {chartsReady ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={daily} margin={{ left: -16, right: 4, top: 4, bottom: 0 }}>
+                <AreaChart data={daily} margin={{ left: -8, right: 8, top: 8, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#7C3AED" stopOpacity={0} />
+                      <stop offset="0%"   stopColor="#14b8a6" stopOpacity={0.45} />
+                      <stop offset="55%"  stopColor="#14b8a6" stopOpacity={0.12} />
+                      <stop offset="100%" stopColor="#14b8a6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="oklch(0.91 0.012 265)" vertical={false} strokeDasharray="3 3" />
+                  <CartesianGrid
+                    stroke="rgba(255,255,255,0.06)"
+                    vertical={false}
+                    strokeDasharray="4 4"
+                  />
                   <XAxis
                     dataKey="label"
-                    stroke="oklch(0.52 0.025 260)"
-                    fontSize={10}
+                    stroke="transparent"
+                    tick={{ fill: "oklch(0.55 0.02 255)", fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
                     interval={4}
                   />
                   <YAxis
-                    stroke="oklch(0.52 0.025 260)"
-                    fontSize={10}
+                    stroke="transparent"
+                    tick={{ fill: "oklch(0.55 0.02 255)", fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                    width={38}
+                    tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
                   />
                   <Tooltip
+                    cursor={{ stroke: "rgba(255,255,255,0.08)", strokeWidth: 1 }}
                     contentStyle={{
                       borderRadius: 12,
-                      border: "1px solid oklch(0.91 0.012 265)",
+                      border: "1px solid rgba(255,255,255,0.10)",
+                      background: "oklch(0.16 0.025 250)",
+                      color: "oklch(0.95 0.005 250)",
                       fontSize: 12,
-                      boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
                     }}
+                    labelStyle={{ color: "oklch(0.60 0.02 255)", marginBottom: 4, fontSize: 11 }}
                     formatter={(v) => [KES(Number(v)), "Revenue"]}
                   />
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#7C3AED"
+                    stroke="#14b8a6"
                     strokeWidth={2.5}
                     fill="url(#revGrad)"
                     dot={false}
-                    activeDot={{ r: 5, fill: "#7C3AED", strokeWidth: 2, stroke: "#fff" }}
+                    activeDot={{ r: 5, fill: "#14b8a6", strokeWidth: 3, stroke: "rgba(20,184,166,0.35)" }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -285,7 +295,14 @@ function DashboardPage() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ borderRadius: 10, fontSize: 12, border: "1px solid oklch(0.91 0.012 265)" }}
+                      contentStyle={{
+                        borderRadius: 10,
+                        fontSize: 12,
+                        border: "1px solid rgba(255,255,255,0.10)",
+                        background: "oklch(0.16 0.025 250)",
+                        color: "oklch(0.95 0.005 250)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
