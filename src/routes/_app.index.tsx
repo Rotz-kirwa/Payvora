@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   Tooltip,
@@ -205,12 +205,11 @@ function DashboardPage() {
           <div className="h-64">
             {chartsReady ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={daily} margin={{ left: -8, right: 8, top: 8, bottom: 0 }}>
+                <BarChart data={daily} margin={{ left: -8, right: 8, top: 8, bottom: 0 }} barCategoryGap="35%">
                   <defs>
-                    <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#14b8a6" stopOpacity={0.45} />
-                      <stop offset="55%"  stopColor="#14b8a6" stopOpacity={0.12} />
-                      <stop offset="100%" stopColor="#14b8a6" stopOpacity={0} />
+                    <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stopColor="#14b8a6" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#0d9488" stopOpacity={0.75} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -235,7 +234,7 @@ function DashboardPage() {
                     tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
                   />
                   <Tooltip
-                    cursor={{ stroke: "rgba(255,255,255,0.08)", strokeWidth: 1 }}
+                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
                     contentStyle={{
                       borderRadius: 12,
                       border: "1px solid rgba(255,255,255,0.10)",
@@ -247,16 +246,13 @@ function DashboardPage() {
                     labelStyle={{ color: "oklch(0.60 0.02 255)", marginBottom: 4, fontSize: 11 }}
                     formatter={(v) => [KES(Number(v)), "Revenue"]}
                   />
-                  <Area
-                    type="monotone"
+                  <Bar
                     dataKey="revenue"
-                    stroke="#14b8a6"
-                    strokeWidth={2.5}
-                    fill="url(#revGrad)"
-                    dot={false}
-                    activeDot={{ r: 5, fill: "#14b8a6", strokeWidth: 3, stroke: "rgba(20,184,166,0.35)" }}
+                    fill="url(#barGrad)"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={28}
                   />
-                </AreaChart>
+                </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
