@@ -62,7 +62,6 @@ const getDebugDataFn = createServerFn({ method: "GET" }).handler(async (): Promi
     getDebugLogStats(),
   ]);
 
-  // JSON round-trip strips non-plain types (postgres.RowList, Date, etc.)
   const plain = JSON.parse(JSON.stringify({ auditRaw, debugStatsRaw })) as {
     auditRaw: typeof auditRaw;
     debugStatsRaw: typeof debugStatsRaw;
@@ -127,8 +126,10 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
-        ok ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700",
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+        ok
+          ? "bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/20"
+          : "bg-red-500/15 text-red-400 ring-1 ring-red-500/20",
       )}
     >
       {ok ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
@@ -157,22 +158,28 @@ function EventRow({ row }: { row: AuditRow }) {
         className="cursor-pointer hover:bg-secondary/40 transition-colors"
         onClick={() => setOpen((v) => !v)}
       >
-        <td className="px-4 py-2">
-          {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+        <td className="px-4 py-2.5">
+          {open
+            ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
         </td>
-        <td className="px-4 py-2 text-xs text-muted-foreground whitespace-nowrap">
+        <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
           {formatDate(row.createdAt)}
         </td>
-        <td className="px-4 py-2 text-xs font-mono">{String(row.eventType ?? "—")}</td>
-        <td className="px-4 py-2 text-xs font-mono">{String(row.route ?? "—")}</td>
-        <td className="px-4 py-2 text-xs">{String(row.transId ?? "—")}</td>
-        <td className="px-4 py-2 text-xs">{String(row.amount ?? "—")}</td>
-        <td className="px-4 py-2 text-xs">{String(row.phoneMasked ?? "—")}</td>
-        <td className="px-4 py-2">
+        <td className="px-4 py-2.5 text-xs font-mono text-foreground/70">{String(row.eventType ?? "—")}</td>
+        <td className="px-4 py-2.5 text-xs font-mono text-foreground/70">{String(row.route ?? "—")}</td>
+        <td className="px-4 py-2.5 text-xs">{String(row.transId ?? "—")}</td>
+        <td className="px-4 py-2.5 text-xs">{String(row.amount ?? "—")}</td>
+        <td className="px-4 py-2.5 text-xs">{String(row.phoneMasked ?? "—")}</td>
+        <td className="px-4 py-2.5">
           <span
             className={cn(
-              "rounded-full px-2 py-0.5 text-xs font-semibold",
-              ok ? "bg-emerald-100 text-emerald-700" : failed ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700",
+              "rounded-full px-2.5 py-0.5 text-xs font-semibold",
+              ok
+                ? "bg-emerald-500/15 text-emerald-400"
+                : failed
+                  ? "bg-red-500/15 text-red-400"
+                  : "bg-yellow-500/15 text-yellow-400",
             )}
           >
             {String(row.processingStatus ?? "—")}
@@ -183,11 +190,11 @@ function EventRow({ row }: { row: AuditRow }) {
         <tr>
           <td colSpan={8} className="bg-secondary/20 px-6 py-3">
             {row.errorMessage && (
-              <p className="mb-2 text-xs text-red-600">
+              <p className="mb-2 text-xs text-red-400">
                 <strong>Error:</strong> {String(row.errorMessage)}
               </p>
             )}
-            <pre className="overflow-x-auto rounded bg-black/5 p-2 text-xs whitespace-pre-wrap break-all max-h-48">
+            <pre className="overflow-x-auto rounded bg-black/30 p-3 text-xs text-foreground/80 whitespace-pre-wrap break-all max-h-48">
               {JSON.stringify(row, null, 2)}
             </pre>
           </td>
@@ -253,7 +260,7 @@ function DebugPage() {
           <button
             onClick={simulate}
             disabled={simulating || loading}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
           >
             {simulating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             Simulate Payment
@@ -261,7 +268,7 @@ function DebugPage() {
           <button
             onClick={refresh}
             disabled={loading}
-            className="flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary disabled:opacity-50 transition-colors"
           >
             <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             Refresh
@@ -275,15 +282,13 @@ function DebugPage() {
           className={cn(
             "flex items-start gap-3 rounded-xl border px-4 py-3 text-sm",
             simResult.ok
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-              : "border-red-200 bg-red-50 text-red-800",
+              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+              : "border-red-500/20 bg-red-500/10 text-red-400",
           )}
         >
-          {simResult.ok ? (
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-          ) : (
-            <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          )}
+          {simResult.ok
+            ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            : <XCircle className="mt-0.5 h-4 w-4 shrink-0" />}
           <span>
             {simResult.ok
               ? `Simulated payment processed — TransID: ${simResult.transId}. Check Payments page.`
@@ -293,7 +298,7 @@ function DebugPage() {
       )}
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
@@ -322,7 +327,7 @@ function DebugPage() {
               { label: "Debug Log Rows", value: String(stats?.total ?? 0) },
               { label: "Latest Event", value: formatDate(counts?.latest) },
             ].map(({ label, value }) => (
-              <div key={label} className="rounded-xl border border-border bg-white p-4 shadow-sm">
+              <div key={label} className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-sm)]">
                 <p className="text-xs text-muted-foreground">{label}</p>
                 <p className="mt-1 text-lg font-bold">{value}</p>
               </div>
@@ -330,7 +335,7 @@ function DebugPage() {
           </div>
 
           {/* Environment health */}
-          <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-sm)]">
             <h2 className="mb-3 font-semibold">Environment Health</h2>
             <div className="flex flex-wrap gap-3">
               <Badge ok={!!env?.allVarsSet} label="All env vars" />
@@ -338,20 +343,20 @@ function DebugPage() {
               <Badge ok={!!env?.shortcode} label={`Shortcode: ${env?.shortcode ?? "not set"}`} />
             </div>
             {env?.callbackUrl && (
-              <div className="mt-3 space-y-1 text-xs text-muted-foreground">
+              <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
                 <p>
-                  <strong>Callback base URL:</strong>{" "}
-                  <code className="rounded bg-secondary px-1">{env.callbackUrl}</code>
+                  <strong className="text-foreground/70">Callback base URL:</strong>{" "}
+                  <code className="rounded bg-secondary px-1.5 py-0.5">{env.callbackUrl}</code>
                 </p>
                 <p>
-                  <strong>C2B confirmation:</strong>{" "}
-                  <code className="rounded bg-secondary px-1">
+                  <strong className="text-foreground/70">C2B confirmation:</strong>{" "}
+                  <code className="rounded bg-secondary px-1.5 py-0.5">
                     {env.callbackUrl}/api/payments/c2b/confirmation
                   </code>
                 </p>
                 <p>
-                  <strong>C2B validation:</strong>{" "}
-                  <code className="rounded bg-secondary px-1">
+                  <strong className="text-foreground/70">C2B validation:</strong>{" "}
+                  <code className="rounded bg-secondary px-1.5 py-0.5">
                     {env.callbackUrl}/api/payments/c2b/validation
                   </code>
                 </p>
@@ -360,7 +365,7 @@ function DebugPage() {
           </div>
 
           {/* Recent callback events */}
-          <div className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="rounded-xl border border-border bg-card shadow-[var(--shadow-sm)]">
             <div className="border-b border-border px-5 py-4">
               <h2 className="font-semibold">Recent Callback Events</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -379,15 +384,15 @@ function DebugPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border bg-secondary/30 text-xs text-muted-foreground">
-                      <th className="px-4 py-2 text-left w-4" />
-                      <th className="px-4 py-2 text-left">Time</th>
-                      <th className="px-4 py-2 text-left">Type</th>
-                      <th className="px-4 py-2 text-left">Route</th>
-                      <th className="px-4 py-2 text-left">Trans ID</th>
-                      <th className="px-4 py-2 text-left">Amount</th>
-                      <th className="px-4 py-2 text-left">Phone</th>
-                      <th className="px-4 py-2 text-left">Status</th>
+                    <tr className="border-b border-border bg-secondary/30 text-xs uppercase tracking-wider text-muted-foreground">
+                      <th className="px-4 py-3 text-left w-4" />
+                      <th className="px-4 py-3 text-left font-medium">Time</th>
+                      <th className="px-4 py-3 text-left font-medium">Type</th>
+                      <th className="px-4 py-3 text-left font-medium">Route</th>
+                      <th className="px-4 py-3 text-left font-medium">Trans ID</th>
+                      <th className="px-4 py-3 text-left font-medium">Amount</th>
+                      <th className="px-4 py-3 text-left font-medium">Phone</th>
+                      <th className="px-4 py-3 text-left font-medium">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -402,7 +407,7 @@ function DebugPage() {
 
           {/* Audit error */}
           {audit && !audit.ok && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
               <strong>Audit table error:</strong> {String(audit.error)}
             </div>
           )}
