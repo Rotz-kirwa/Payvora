@@ -65,7 +65,7 @@ function computeStats(payments: MpesaPayment[]) {
 
   const inRange = (start: Date, end?: Date) =>
     payments.filter((p) => {
-      const d = p.createdAt;
+      const d = new Date(p.createdAt);
       return d >= start && (!end || d <= end);
     });
 
@@ -105,7 +105,7 @@ function buildChartData(payments: MpesaPayment[], range: ChartRange) {
       end.setHours(h + 1);
       return {
         label: `${String(h).padStart(2, "0")}:00`,
-        revenue: sumSuccess(payments.filter((p) => p.createdAt >= start && p.createdAt < end)),
+        revenue: sumSuccess(payments.filter((p) => { const t = new Date(p.createdAt); return t >= start && t < end; })),
       };
     });
   }
@@ -117,7 +117,7 @@ function buildChartData(payments: MpesaPayment[], range: ChartRange) {
       const end = new Date(now.getFullYear(), i + 1, 1);
       return {
         label: start.toLocaleDateString("en-KE", { month: "short" }),
-        revenue: sumSuccess(payments.filter((p) => p.createdAt >= start && p.createdAt < end)),
+        revenue: sumSuccess(payments.filter((p) => { const t = new Date(p.createdAt); return t >= start && t < end; })),
       };
     });
   }
@@ -131,7 +131,7 @@ function buildChartData(payments: MpesaPayment[], range: ChartRange) {
     next.setDate(next.getDate() + 1);
     return {
       label: d.toLocaleDateString("en-KE", { month: "short", day: "numeric" }),
-      revenue: sumSuccess(payments.filter((p) => p.createdAt >= d && p.createdAt < next)),
+      revenue: sumSuccess(payments.filter((p) => { const t = new Date(p.createdAt); return t >= d && t < next; })),
     };
   });
 }

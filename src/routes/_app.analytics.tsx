@@ -52,7 +52,7 @@ function buildDailySeries(payments: MpesaPayment[], days: number) {
     const next = new Date(d);
     next.setDate(next.getDate() + 1);
     const revenue = payments
-      .filter((p) => p.status === "Success" && p.createdAt >= d && p.createdAt < next)
+      .filter((p) => { const t = new Date(p.createdAt); return p.status === "Success" && t >= d && t < next; })
       .reduce((acc, p) => acc + Number(p.amount), 0);
     return {
       label: d.toLocaleDateString("en-KE", { month: "short", day: "numeric" }),
