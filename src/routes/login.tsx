@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { getCurrentUserFn, useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -37,8 +37,18 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--gradient-subtle)] p-4">
-      <div className="w-full max-w-md">
+    <div
+      className="flex min-h-screen items-center justify-center p-4"
+      style={{
+        backgroundImage: "url('https://i.pinimg.com/736x/91/7d/a4/917da4ebb7424c3f6dc4892470178976.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* Dark overlay so the card stays readable */}
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl shadow-[var(--shadow-glow)]">
