@@ -91,7 +91,39 @@ function computeStats(payments: MpesaPayment[]) {
   };
 }
 
-function dailySeries(payments: MpesaPayment[], days: number) {
+type ChartRange = "daily" | "7d" | "30d" | "yearly";
+
+function buildChartData(payments: MpesaPayment[], range: ChartRange) {
+  const now = new Date();
+
+  if (range === "daily") {
+    // 24 hourly buckets for today
+    return Array.from({ length: 24 }, (_, h) => {
+      const start = new Date(startOfDay(now));
+      start.setHours(h);
+      const end = new Date(start);
+      end.setHours(h + 1);
+      return {
+        label: `${String(h).padStart(2, "0")}:00`,
+        revenue: sumSuccess(payments.filter((p) => p.createdAt >= start && p.createdAt < end)),
+      };
+    });
+  }
+
+  if (range === "yearly") {
+    // 12 monthly buckets
+    return Array.from({ length: 12 }, (_, i) => {
+      const start = new Date(now.getFullYear(), i, 1);
+      const end = new Date(now.getFullYear(), i + 1, 1);
+      return {
+        label: start.toLocaleDateString("en-KE", { month: "short" }),
+        revenue: sumSuccess(payments.filter((p) => p.createdAt >= start && p.createdAt < end)),
+      };
+    });
+  }
+
+  // 7d or 30d — daily buckets
+  const days = range === "7d" ? 7 : 30;
   return Array.from({ length: days }, (_, i) => {
     const d = startOfDay(new Date());
     d.setDate(d.getDate() - (days - 1 - i));
@@ -104,6 +136,13 @@ function dailySeries(payments: MpesaPayment[], days: number) {
   });
 }
 
+const RANGE_OPTIONS: { label: string; value: ChartRange }[] = [
+  { label: "Daily", value: "daily" },
+  { label: "7 Days", value: "7d" },
+  { label: "Monthly", value: "30d" },
+  { label: "Yearly", value: "yearly" },
+];
+
 const STATUS_COLORS = {
   Success: "#14b8a6",
   Pending: "#f59e0b",
@@ -115,13 +154,14 @@ function DashboardPage() {
   const initialPayments = Route.useLoaderData();
   const { payments, lastUpdated } = useLivePayments(initialPayments);
   const [chartsReady, setChartsReady] = useState(false);
+  const [chartRange, setChartRange] = useState<ChartRange>("7d");
 
   useEffect(() => {
     setChartsReady(true);
   }, []);
 
   const stats = computeStats(payments);
-  const daily = dailySeries(payments, 30);
+  const chartData = buildChartData(payments, chartRange);
   const recent = [...payments]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0, 8);
@@ -188,24 +228,43 @@ function DashboardPage() {
 
       {/* Charts row */}
       <section className="grid gap-6 lg:grid-cols-3">
-        {/* Area chart */}
+        {/* Bar chart */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-sm)] lg:col-span-2">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">Revenue trend</h2>
-              <p className="text-xs text-muted-foreground">Last 30 days · successful payments only</p>
+              <p className="text-xs text-muted-foreground">
+                {chartRange === "daily" ? "Today · by hour" : chartRange === "7d" ? "Last 7 days" : chartRange === "30d" ? "Last 30 days" : "This year · by month"} · successful payments only
+              </p>
             </div>
-            <span
-              className="rounded-xl px-3 py-1 text-sm font-semibold text-white shadow-sm"
-              style={{ background: "var(--gradient-primary)" }}
-            >
-              {KES(daily.reduce((a, b) => a + b.revenue, 0))}
-            </span>
+            <div className="flex items-center gap-2">
+              {/* Range switcher */}
+              <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                {RANGE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setChartRange(opt.value)}
+                    className="rounded-md px-3 py-1 text-xs font-medium transition-all"
+                    style={chartRange === opt.value
+                      ? { background: "#14b8a6", color: "#fff", boxShadow: "0 2px 8px rgba(20,184,166,0.35)" }
+                      : { color: "oklch(0.60 0.02 255)" }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <span
+                className="rounded-xl px-3 py-1 text-sm font-semibold text-white shadow-sm"
+                style={{ background: "var(--gradient-primary)" }}
+              >
+                {KES(chartData.reduce((a, b) => a + b.revenue, 0))}
+              </span>
+            </div>
           </div>
           <div className="h-64">
             {chartsReady ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={daily} margin={{ left: -8, right: 8, top: 8, bottom: 0 }} barCategoryGap="35%">
+                <BarChart data={chartData} margin={{ left: -8, right: 8, top: 8, bottom: 0 }} barCategoryGap="35%">
                   <defs>
                     <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%"   stopColor="#14b8a6" stopOpacity={1} />
@@ -223,15 +282,21 @@ function DashboardPage() {
                     tick={{ fill: "oklch(0.55 0.02 255)", fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
-                    interval={4}
+                    interval={chartRange === "daily" ? 3 : chartRange === "7d" ? 0 : chartRange === "30d" ? 4 : 0}
                   />
                   <YAxis
                     stroke="transparent"
                     tick={{ fill: "oklch(0.55 0.02 255)", fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
-                    width={38}
-                    tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
+                    width={42}
+                    domain={[0, "auto"]}
+                    tickCount={6}
+                    tickFormatter={(v) => {
+                      if (v === 0) return "0";
+                      if (v >= 1000) return `${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}k`;
+                      return String(v);
+                    }}
                   />
                   <Tooltip
                     cursor={{ fill: "rgba(255,255,255,0.04)" }}
@@ -250,7 +315,7 @@ function DashboardPage() {
                     dataKey="revenue"
                     fill="url(#barGrad)"
                     radius={[4, 4, 0, 0]}
-                    maxBarSize={28}
+                    maxBarSize={chartRange === "7d" ? 40 : chartRange === "daily" ? 20 : 28}
                   />
                 </BarChart>
               </ResponsiveContainer>
