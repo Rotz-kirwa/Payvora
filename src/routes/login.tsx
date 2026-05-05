@@ -146,7 +146,7 @@ function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 w-full rounded-xl pl-10 pr-12 text-sm text-white outline-none transition-all placeholder:text-white/25"
+                  className="h-12 w-full rounded-xl pl-10 pr-14 text-sm text-white outline-none transition-all placeholder:text-white/25"
                   style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
                   onFocus={(e) => {
                     e.currentTarget.style.border = "1px solid rgba(20,184,166,0.6)";
@@ -162,11 +162,17 @@ function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-0 top-0 flex h-12 w-12 items-center justify-center rounded-r-xl text-white/50 transition-colors hover:text-white"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-lg transition-all hover:scale-110 active:scale-95"
+                  style={{
+                    background: showPassword ? "rgba(20,184,166,0.25)" : "rgba(255,255,255,0.10)",
+                    color: showPassword ? "rgb(20,184,166)" : "rgba(255,255,255,0.75)",
+                    border: showPassword ? "1px solid rgba(20,184,166,0.4)" : "1px solid rgba(255,255,255,0.15)",
+                    boxShadow: showPassword ? "0 0 8px rgba(20,184,166,0.3)" : "none",
+                  }}
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
