@@ -324,27 +324,11 @@ export async function processPaymentSms(params: {
     return;
   }
 
-  // 2. Validate phone — Safaricom hashes the MSISDN for C2B Buy Goods.
-  //    If SMS_PROVIDER=safaricom, pass the hash through — Safaricom's own gateway
-  //    can resolve it and deliver to the real number (confirmed by Daraja support).
-  //    For all other providers, a hashed MSISDN cannot be delivered to.
-  const isSafaricomProvider = (process.env.SMS_PROVIDER?.toLowerCase() ?? "") === "safaricom";
-  if (!isValidKenyanPhone(phone) && !isSafaricomProvider) {
-    console.log(
-      `[sms-automation] Phone is a hashed MSISDN and SMS_PROVIDER is not "safaricom". SMS cannot be delivered. paymentId=${paymentId}`,
-    );
-    await db.insert(smsLogs).values({
-      paymentId,
-      ruleId: null,
-      phone,
-      amount: String(amount),
-      message: "",
-      status: "failed",
-      errorMessage:
-        "MSISDN is a Safaricom hash. Set SMS_PROVIDER=safaricom to send via Daraja (their gateway resolves hashes). Third-party providers cannot deliver.",
-    });
-    return;
-  }
+  // 2. Phone validation — Safaricom Daraja support confirmed that Onfon (and other
+  //    registered Kenyan SMS providers) can deliver to the hashed MSISDN that comes
+  //    in C2B Buy Goods callbacks. Pass the phone through as-is to the provider.
+  console.log(`[sms-automation] Phone: ${phone.slice(0, 10)}... (may be hashed MSISDN — provider will resolve)`);
+
 
   // 3. Find matching active rule — use explicit numeric cast to avoid implicit text comparison
   const [matchedRule] = await db
