@@ -2,7 +2,7 @@
  * SMS Provider Integration
  *
  * Environment variables:
- *   SMS_PROVIDER          - "onfon" | "africastalking" | "custom"  (default: "africastalking")
+ *   SMS_PROVIDER          - "onfon" | "africastalking" | "safaricom" | "custom"  (default: "africastalking")
  *
  * Onfon Media (SMS_PROVIDER=onfon):
  *   ONFON_API_KEY    - Onfon account API key
@@ -13,6 +13,13 @@
  * Africa's Talking (SMS_PROVIDER=africastalking):
  *   AFRICASTALKING_USERNAME  - AT account username
  *   AFRICASTALKING_API_KEY   - AT API key
+ *
+ * Safaricom Daraja SMS (SMS_PROVIDER=safaricom):
+ *   Uses MPESA_CONSUMER_KEY + MPESA_CONSUMER_SECRET for OAuth (same credentials as M-Pesa).
+ *   Supports sending to hashed MSISDNs from C2B Buy Goods callbacks — Safaricom resolves
+ *   the hash on their side and delivers to the real number.
+ *   MPESA_SHORTCODE      - Your shortcode / sender ID (already set for M-Pesa)
+ *   SAFARICOM_SMS_URL    - Override SMS endpoint (default: Daraja v1/sms/send)
  *
  * Custom HTTP provider (SMS_PROVIDER=custom):
  *   SMS_CUSTOM_URL           - Full POST URL of SMS endpoint
@@ -175,6 +182,64 @@ async function sendAfricasTalking(phone: string, message: string): Promise<SmsSe
   };
 }
 
+async function sendSafaricom(phone: string, message: string): Promise<SmsSendResult> {
+  const key = process.env.MPESA_CONSUMER_KEY?.trim();
+  const secret = process.env.MPESA_CONSUMER_SECRET?.trim();
+  const shortcode = process.env.MPESA_SHORTCODE?.trim();
+
+  if (!key || !secret) {
+    throw new Error("MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET must be set for SMS_PROVIDER=safaricom");
+  }
+
+  const base =
+    process.env.MPESA_ENVIRONMENT === "production"
+      ? "https://api.safaricom.co.ke"
+      : "https://sandbox.safaricom.co.ke";
+
+  // Get OAuth token
+  const tokenRes = await fetch(`${base}/oauth/v1/generate?grant_type=client_credentials`, {
+    headers: { Authorization: `Basic ${Buffer.from(`${key}:${secret}`).toString("base64")}` },
+  });
+  const tokenData = (await tokenRes.json()) as { access_token?: string; errorMessage?: string };
+  if (!tokenData.access_token) {
+    return {
+      success: false,
+      response: tokenData as Record<string, unknown>,
+      error: `Safaricom OAuth failed: ${tokenData.errorMessage ?? "no access_token"}`,
+    };
+  }
+
+  const smsUrl =
+    process.env.SAFARICOM_SMS_URL?.trim() ?? `${base}/v1/sms/send`;
+
+  const body: Record<string, string> = { message, phoneNumber: phone };
+  if (shortcode) body.shortCode = shortcode;
+
+  console.log(`[sms/safaricom] Sending to ${phone.slice(0, 10)}... via ${smsUrl}`);
+
+  const res = await fetch(smsUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${tokenData.access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  const text = await res.text();
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(text); } catch { data = { raw: text }; }
+
+  const ok = res.ok && !data.errorCode && !data.ResponseCode;
+  console.log(`[sms/safaricom] HTTP ${res.status} — ${ok ? "SUCCESS" : `FAILED: ${text.slice(0, 120)}`}`);
+
+  return {
+    success: ok,
+    response: data,
+    error: ok ? undefined : `Safaricom SMS HTTP ${res.status}: ${text.slice(0, 120)}`,
+  };
+}
+
 async function sendCustom(phone: string, message: string): Promise<SmsSendResult> {
   const url = process.env.SMS_CUSTOM_URL?.trim();
   const apiKey = process.env.SMS_CUSTOM_API_KEY?.trim();
@@ -224,11 +289,12 @@ export async function sendSms(phone: string, message: string): Promise<SmsSendRe
   try {
     if (provider === "onfon") return await sendOnfon(phone, message);
     if (provider === "africastalking") return await sendAfricasTalking(phone, message);
+    if (provider === "safaricom") return await sendSafaricom(phone, message);
     if (provider === "custom") return await sendCustom(phone, message);
     return {
       success: false,
       response: {},
-      error: `Unknown SMS_PROVIDER "${provider}". Set to "onfon", "africastalking", or "custom".`,
+      error: `Unknown SMS_PROVIDER "${provider}". Set to "onfon", "africastalking", "safaricom", or "custom".`,
     };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
