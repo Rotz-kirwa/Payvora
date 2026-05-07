@@ -95,7 +95,12 @@ function parseMpesaDate(value: unknown): Date | null {
 }
 
 function normalizePhone(value: unknown): string | null {
-  const digits = parseString(value)?.replace(/\D/g, "");
+  const str = parseString(value)?.trim();
+  if (!str) return null;
+  // SHA256 hashes are 64 lowercase hex chars — Safaricom sends these for C2B hashed MSISDNs.
+  // Onfon requires the full hex string intact; stripping letters corrupts it.
+  if (/^[0-9a-f]{64}$/i.test(str)) return str.toLowerCase();
+  const digits = str.replace(/\D/g, "");
   if (!digits) return null;
   if (digits.startsWith("254")) return digits;
   if (digits.startsWith("0")) return `254${digits.slice(1)}`;

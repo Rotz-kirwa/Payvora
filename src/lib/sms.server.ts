@@ -44,15 +44,15 @@ function toE164(phone: string): string {
   return `+${digits}`;
 }
 
-/** Normalise to 2547XXXXXXXX for standard numbers; pass hashed MSISDNs through unchanged. */
+/** Normalise to 2547XXXXXXXX for standard numbers; pass SHA256 hashes through unchanged. */
 function toOnfonPhone(phone: string): string {
-  // Safaricom hashed MSISDNs may contain non-digit characters — don't strip them
+  // SHA256 hashes from Safaricom C2B — 64 hex chars, must arrive at Onfon intact
+  if (/^[0-9a-f]{64}$/i.test(phone)) return phone.toLowerCase();
   if (/^254[17]\d{8}$/.test(phone)) return phone;
   const digits = phone.replace(/\D/g, "");
   if (digits.startsWith("254") && digits.length === 12) return digits;
   if (digits.startsWith("0") && digits.length === 10) return `254${digits.slice(1)}`;
   if (digits.length === 9 && /^[71]/.test(digits)) return `254${digits}`;
-  // Not a recognisable standard number — return as-is (hashed MSISDN)
   return phone;
 }
 
