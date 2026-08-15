@@ -148,8 +148,8 @@ export async function createRule(input: {
   messageTemplate: string;
   isActive: boolean;
 }): Promise<RuleRow | OverlapError | ValidationError> {
-  if (input.minAmount >= input.maxAmount) {
-    return { type: "validation", message: "Minimum amount must be less than maximum amount." };
+  if (input.minAmount > input.maxAmount) {
+    return { type: "validation", message: "Minimum amount cannot be greater than maximum amount." };
   }
   if (input.minAmount <= 0 || input.maxAmount <= 0) {
     return { type: "validation", message: "Amounts must be positive numbers." };
@@ -187,8 +187,8 @@ export async function updateRule(
     isActive: boolean;
   },
 ): Promise<RuleRow | OverlapError | ValidationError> {
-  if (input.minAmount >= input.maxAmount) {
-    return { type: "validation", message: "Minimum amount must be less than maximum amount." };
+  if (input.minAmount > input.maxAmount) {
+    return { type: "validation", message: "Minimum amount cannot be greater than maximum amount." };
   }
   if (input.minAmount <= 0 || input.maxAmount <= 0) {
     return { type: "validation", message: "Amounts must be positive numbers." };

@@ -5,7 +5,7 @@ import { z } from "zod";
 import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight, MessageSquare,
   Send, CheckCircle2, XCircle, AlertTriangle, Loader2, X,
-  Zap, ZapOff, Bell, Clock, ChevronDown, ChevronUp,
+  Zap, ZapOff, Bell, Clock, ChevronDown, ChevronUp, Target, SlidersHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -135,8 +135,11 @@ function RuleModal({
   onSaved: (rule: RuleRow) => void;
 }) {
   const editing = modalMode.mode === "edit" ? modalMode.rule : null;
+  const isFixedInitially = editing ? editing.minAmount === editing.maxAmount : false;
 
   const [name, setName] = useState(editing?.name ?? "");
+  const [amountMode, setAmountMode] = useState<"fixed" | "range">(isFixedInitially ? "fixed" : "fixed");
+  const [fixedAmount, setFixedAmount] = useState(editing && isFixedInitially ? String(editing.minAmount) : "");
   const [min, setMin] = useState(editing ? String(editing.minAmount) : "");
   const [max, setMax] = useState(editing ? String(editing.maxAmount) : "");
   const [template, setTemplate] = useState(
@@ -161,12 +164,23 @@ function RuleModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    const minN = parseFloat(min);
-    const maxN = parseFloat(max);
+
+    let minN: number;
+    let maxN: number;
+
+    if (amountMode === "fixed") {
+      minN = parseFloat(fixedAmount);
+      maxN = parseFloat(fixedAmount);
+      if (isNaN(minN) || minN <= 0) { setError("Fixed amount must be a positive number."); return; }
+    } else {
+      minN = parseFloat(min);
+      maxN = parseFloat(max);
+      if (isNaN(minN) || minN <= 0) { setError("Minimum amount must be a positive number."); return; }
+      if (isNaN(maxN) || maxN <= 0) { setError("Maximum amount must be a positive number."); return; }
+      if (minN > maxN) { setError("Minimum amount cannot be greater than maximum amount."); return; }
+    }
+
     if (!name.trim()) { setError("Rule name is required."); return; }
-    if (isNaN(minN) || minN <= 0) { setError("Minimum amount must be a positive number."); return; }
-    if (isNaN(maxN) || maxN <= 0) { setError("Maximum amount must be a positive number."); return; }
-    if (minN >= maxN) { setError("Minimum must be less than maximum amount."); return; }
     if (!template.trim()) { setError("Message template cannot be empty."); return; }
 
     setLoading(true);
@@ -180,7 +194,7 @@ function RuleModal({
 
       if (result && "type" in result) {
         if (result.type === "overlap") {
-          const names = result.conflicting.map((r: RuleRow) => `"${r.name}" (${KES(r.minAmount)}–${KES(r.maxAmount)})`).join(", ");
+          const names = result.conflicting.map((r: RuleRow) => `"${r.name}" (${r.minAmount === r.maxAmount ? KES(r.minAmount) : `${KES(r.minAmount)}–${KES(r.maxAmount)}`})`).join(", ");
           setError(`Range overlaps with active rule(s): ${names}. Disable them first, or make this rule inactive.`);
         } else {
           setError(result.message);
@@ -232,7 +246,7 @@ function RuleModal({
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. KES 1 - 50 Package"
+                placeholder="e.g. KES 150 Standard Package"
                 className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
               />
             </div>
@@ -254,29 +268,75 @@ function RuleModal({
             </div>
           </div>
 
-          {/* Amount range */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Min Amount (KES)</label>
-              <input
-                type="number" min="1" step="any"
-                value={min}
-                onChange={(e) => setMin(e.target.value)}
-                placeholder="e.g. 1"
-                className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Max Amount (KES)</label>
-              <input
-                type="number" min="1" step="any"
-                value={max}
-                onChange={(e) => setMax(e.target.value)}
-                placeholder="e.g. 50"
-                className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-              />
+          {/* Amount Mode Selector */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Amount Mode</label>
+            <div className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-secondary/40 p-1">
+              <button
+                type="button"
+                onClick={() => setAmountMode("fixed")}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all",
+                  amountMode === "fixed"
+                    ? "bg-card text-foreground shadow-sm font-semibold border border-border/50"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Target className="h-3.5 w-3.5" />
+                Fixed Amount (Exact)
+              </button>
+              <button
+                type="button"
+                onClick={() => setAmountMode("range")}
+                className={cn(
+                  "flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all",
+                  amountMode === "range"
+                    ? "bg-card text-foreground shadow-sm font-semibold border border-border/50"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                Amount Range
+              </button>
             </div>
           </div>
+
+          {/* Amount inputs */}
+          {amountMode === "fixed" ? (
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exact Amount (KES)</label>
+              <input
+                type="number" min="1" step="any"
+                value={fixedAmount}
+                onChange={(e) => setFixedAmount(e.target.value)}
+                placeholder="e.g. 150"
+                className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Min Amount (KES)</label>
+                <input
+                  type="number" min="1" step="any"
+                  value={min}
+                  onChange={(e) => setMin(e.target.value)}
+                  placeholder="e.g. 1"
+                  className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Max Amount (KES)</label>
+                <input
+                  type="number" min="1" step="any"
+                  value={max}
+                  onChange={(e) => setMax(e.target.value)}
+                  placeholder="e.g. 50"
+                  className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Message template */}
           <div>
@@ -652,7 +712,13 @@ function SmsAutomationPage() {
                     <tr key={rule.id} className="hover:bg-secondary/30 transition-colors">
                       <td className="px-5 py-3.5 font-semibold">{rule.name}</td>
                       <td className="px-5 py-3.5 text-muted-foreground font-mono text-xs">
-                        {KES(rule.minAmount)} – {KES(rule.maxAmount)}
+                        {rule.minAmount === rule.maxAmount ? (
+                          <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                            {KES(rule.minAmount)} <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">Fixed</span>
+                          </span>
+                        ) : (
+                          `${KES(rule.minAmount)} – ${KES(rule.maxAmount)}`
+                        )}
                       </td>
                       <td className="px-5 py-3.5 max-w-xs">
                         <p className="truncate text-xs text-muted-foreground" title={rule.messageTemplate}>
