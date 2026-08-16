@@ -336,7 +336,7 @@ function DashboardPage() {
           <div className="relative h-52">
             {chartsReady ? (
               <>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <PieChart>
                     <Pie
                       data={statusCounts}

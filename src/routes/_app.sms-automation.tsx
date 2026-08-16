@@ -217,7 +217,7 @@ function buildPreview(template: string): string {
 
 // ─── Rule Modal ───────────────────────────────────────────────────────────────
 
-type ModalMode = { mode: "add" } | { mode: "edit"; rule: RuleRow };
+type ModalMode = { mode: "add"; initialPreset?: typeof TIER_PRESETS[0] } | { mode: "edit"; rule: RuleRow };
 
 export function parseBulkMatchesText(rawText: string): MatchRow[] {
   if (!rawText || !rawText.trim()) return [];
@@ -431,16 +431,20 @@ function RuleModal({
   onSaved: (rule: RuleRow) => void;
 }) {
   const editing = modalMode.mode === "edit" ? modalMode.rule : null;
-  const isFixedInitially = editing ? editing.minAmount === editing.maxAmount : false;
+  const initialPreset = modalMode.mode === "add" ? modalMode.initialPreset : null;
+  const isFixedInitially = editing ? editing.minAmount === editing.maxAmount : true;
 
-  const [name, setName] = useState(editing?.name ?? "");
+  const [name, setName] = useState(editing?.name ?? initialPreset?.name ?? "");
   const [amountMode, setAmountMode] = useState<"fixed" | "range">(isFixedInitially ? "fixed" : "fixed");
-  const [fixedAmount, setFixedAmount] = useState(editing && isFixedInitially ? String(editing.minAmount) : "");
-  const [min, setMin] = useState(editing ? String(editing.minAmount) : "");
-  const [max, setMax] = useState(editing ? String(editing.maxAmount) : "");
+  const [fixedAmount, setFixedAmount] = useState(
+    editing && isFixedInitially ? String(editing.minAmount) : initialPreset ? initialPreset.amount : "",
+  );
+  const [min, setMin] = useState(editing ? String(editing.minAmount) : initialPreset ? initialPreset.amount : "");
+  const [max, setMax] = useState(editing ? String(editing.maxAmount) : initialPreset ? initialPreset.amount : "");
   const [template, setTemplate] = useState(
     editing?.messageTemplate ??
-      "Gold Tier Package:\nArsenal vs Everton -> 1\nChelsea vs West Ham -> Over 2.5\nMan City vs Fulham -> 1X\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.",
+      initialPreset?.template ??
+      "DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.",
   );
   const [isActive, setIsActive] = useState(editing?.isActive ?? true);
   const [loading, setLoading] = useState(false);
@@ -1447,7 +1451,7 @@ function SmsAutomationPage() {
                       if (matchedRule) {
                         setModal({ mode: "edit", rule: matchedRule });
                       } else {
-                        handleSelectPreset(preset);
+                        setModal({ mode: "add", initialPreset: preset });
                       }
                     }}
                     className="flex-1 rounded-lg bg-primary/10 text-primary border border-primary/20 py-1 text-[11px] font-semibold hover:bg-primary/20 transition-colors"
