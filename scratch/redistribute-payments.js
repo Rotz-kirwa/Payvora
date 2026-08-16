@@ -30,7 +30,10 @@ function randomReceipt() {
 
 function randomDateInMonth(year, monthIndex) {
   const startDate = new Date(year, monthIndex, 1);
-  const endDate = new Date(year, monthIndex + 1, 0);
+  // Cap August at August 5th
+  const endDate = monthIndex === 7
+    ? new Date(year, monthIndex, 5, 23, 59, 59)
+    : new Date(year, monthIndex + 1, 0, 23, 59, 59);
   const randomTime = startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime());
   return new Date(randomTime);
 }
@@ -43,14 +46,14 @@ async function run() {
   // May: ~4,600 KES
   // June: ~9,200 KES (HIGHEST)
   // July: ~5,350 KES
-  // August: ~3,705 KES
+  // August (Aug 1 to Aug 5 ONLY): ~3,705 KES
   // Total = 22,855 KES
 
   const targets = [
     { month: 4, label: "May", target: 4600 },
     { month: 5, label: "June", target: 9200 },
     { month: 6, label: "July", target: 5350 },
-    { month: 7, label: "August", target: 3705 },
+    { month: 7, label: "August (Aug 1 - Aug 5)", target: 3705 },
   ];
 
   const amounts = [100, 50, 30, 150, 200, 500];
@@ -113,6 +116,8 @@ async function run() {
   const summary = await sql`
     SELECT 
       TO_CHAR(created_at, 'YYYY-MM') as month,
+      MIN(created_at) as earliest_date,
+      MAX(created_at) as latest_date,
       COUNT(*) as count, 
       SUM(amount::numeric) as total_amount 
     FROM mpesa_payments 
@@ -120,7 +125,7 @@ async function run() {
     GROUP BY TO_CHAR(created_at, 'YYYY-MM')
     ORDER BY month;
   `;
-  console.log("Monthly Summary Breakdown:", summary);
+  console.log("Monthly Summary Breakdown with Date Ranges:", summary);
 
   const grandTotal = await sql`
     SELECT SUM(amount::numeric) as grand_total FROM mpesa_payments WHERE status = 'Success';
