@@ -119,6 +119,20 @@ const PLACEHOLDERS = [
   { tag: "{business_name}", desc: "Business name" },
 ];
 
+const PACKAGE_NAME_MAP: Record<string, string> = {
+  "daily football games": "Daily Matches ⚽",
+  "gold": "Daily Matches ⚽",
+  "platinum": "Jackpot Matches 🏆",
+  "sapphire": "Basket Matches 🏀",
+  "ruby": "Weekly Subscription 📅",
+  "emerald": "Monthly Subscription 📆",
+};
+
+function displayPackageName(name: string) {
+  const key = name.toLowerCase().trim();
+  return PACKAGE_NAME_MAP[key] || name;
+}
+
 const TIER_PRESETS = [
   {
     name: "Daily Matches ⚽",
@@ -1537,7 +1551,7 @@ function SmsAutomationPage() {
                     <tr key={rule.id} className="hover:bg-secondary/30 transition-colors">
                       <td className="px-5 py-3.5">
                         <p className="font-bold text-foreground flex items-center gap-1.5">
-                          {rule.name}
+                          {displayPackageName(rule.name)}
                         </p>
                       </td>
                       <td className="px-5 py-3.5 text-muted-foreground font-mono text-xs">

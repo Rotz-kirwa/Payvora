@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, ne, or, sql } from "drizzle-orm";
 import { db } from "./db/client";
 import { appSettings, smsAutomationRules, smsLogs } from "./db/schema";
 import { sendSms } from "./sms.server";
@@ -119,16 +119,41 @@ function toRuleRow(r: typeof smsAutomationRules.$inferSelect): RuleRow {
 }
 
 export async function fetchAllRules(): Promise<RuleRow[]> {
+  try {
+    await db
+      .update(smsAutomationRules)
+      .set({ name: "Daily Matches ⚽", minAmount: "50", maxAmount: "50", updatedAt: new Date() })
+      .where(or(eq(smsAutomationRules.name, "DAILY FOOTBALL GAMES"), eq(smsAutomationRules.name, "Gold")));
+
+    await db
+      .update(smsAutomationRules)
+      .set({ name: "Jackpot Matches 🏆", minAmount: "100", maxAmount: "100", updatedAt: new Date() })
+      .where(eq(smsAutomationRules.name, "Platinum"));
+
+    await db
+      .update(smsAutomationRules)
+      .set({ name: "Basket Matches 🏀", minAmount: "50", maxAmount: "50", updatedAt: new Date() })
+      .where(eq(smsAutomationRules.name, "Sapphire"));
+
+    await db
+      .update(smsAutomationRules)
+      .set({ name: "Weekly Subscription 📅", minAmount: "500", maxAmount: "500", updatedAt: new Date() })
+      .where(eq(smsAutomationRules.name, "Ruby"));
+
+    await db
+      .update(smsAutomationRules)
+      .set({ name: "Monthly Subscription 📆", minAmount: "1500", maxAmount: "1500", updatedAt: new Date() })
+      .where(eq(smsAutomationRules.name, "Emerald"));
+  } catch (err) {
+    console.error("Migration error:", err);
+  }
+
   const rows = await db
     .select()
     .from(smsAutomationRules)
     .orderBy(smsAutomationRules.minAmount);
 
-  const hasLegacyNames = rows.some((r) =>
-    ["gold", "daily football games", "platinum", "sapphire", "ruby", "emerald"].includes(r.name.toLowerCase().trim()),
-  );
-
-  if (hasLegacyNames || rows.length === 0) {
+  if (rows.length === 0) {
     return resetDefaultTiers();
   }
 
