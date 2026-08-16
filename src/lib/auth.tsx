@@ -67,6 +67,40 @@ export function AuthProvider({
     }
   };
 
+  // ─── Auto Logout on Inactivity (15 Minutes) ───────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+
+    const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+    let timer: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        logout();
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    resetTimer();
+
+    let lastActivity = Date.now();
+    const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastActivity > 3000) {
+        lastActivity = now;
+        resetTimer();
+      }
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
+    events.forEach((ev) => window.addEventListener(ev, handleActivity, { passive: true }));
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((ev) => window.removeEventListener(ev, handleActivity));
+    };
+  }, [user]);
+
   return (
     <Ctx.Provider
       value={{
