@@ -99,24 +99,8 @@ export async function setSmsAutomationEnabled(enabled: boolean): Promise<void> {
 
 // ─── Overlap detection ────────────────────────────────────────────────────────
 
-export async function findOverlappingActiveRules(
-  minAmount: number,
-  maxAmount: number,
-  excludeId?: string,
-): Promise<RuleRow[]> {
-  const conditions = [
-    eq(smsAutomationRules.isActive, true),
-    sql`${smsAutomationRules.minAmount}::numeric <= ${maxAmount}::numeric`,
-    sql`${smsAutomationRules.maxAmount}::numeric >= ${minAmount}::numeric`,
-  ];
-  if (excludeId) conditions.push(ne(smsAutomationRules.id, excludeId));
-
-  const rows = await db
-    .select()
-    .from(smsAutomationRules)
-    .where(and(...conditions));
-
-  return rows.map(toRuleRow);
+export async function findOverlappingActiveRules(): Promise<RuleRow[]> {
+  return [];
 }
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
@@ -159,11 +143,6 @@ export async function createRule(input: {
     return { type: "validation", message: "Message template cannot be empty." };
   }
 
-  if (input.isActive) {
-    const overlaps = await findOverlappingActiveRules(input.minAmount, input.maxAmount);
-    if (overlaps.length > 0) return { type: "overlap", conflicting: overlaps };
-  }
-
   const [row] = await db
     .insert(smsAutomationRules)
     .values({
@@ -198,11 +177,6 @@ export async function updateRule(
     return { type: "validation", message: "Message template cannot be empty." };
   }
 
-  if (input.isActive) {
-    const overlaps = await findOverlappingActiveRules(input.minAmount, input.maxAmount, id);
-    if (overlaps.length > 0) return { type: "overlap", conflicting: overlaps };
-  }
-
   const [row] = await db
     .update(smsAutomationRules)
     .set({
@@ -228,38 +202,38 @@ export async function resetDefaultTiers(): Promise<RuleRow[]> {
 
   const defaultTiers = [
     {
-      name: "Gold",
+      name: "Daily Matches ⚽",
       minAmount: "50",
       maxAmount: "50",
-      messageTemplate: "Gold Tier Package:\nArsenal vs Everton → 1\nChelsea vs West Ham → OVER 2.5\nMan City vs Fulham → 1X\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}",
+      messageTemplate: `DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nLiverpool vs Tottenham -> Liverpool Win (1)\nManchester City vs Newcastle -> Over 2.5 Goals\nManchester United vs Aston Villa -> Both Teams To Score (BTTS)\nReal Madrid vs Sevilla -> Real Madrid Win (1)\nBarcelona vs Villarreal -> Barcelona Win (1)\nBayern Munich vs Borussia Dortmund -> Over 2.5 Goals\nInter Milan vs AC Milan -> Inter Milan Win (1)\nPSG vs Lyon -> PSG Win (1)\nJuventus vs Napoli -> Both Teams To Score (BTTS)\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.`,
       isActive: true,
     },
     {
-      name: "Platinum",
+      name: "Jackpot Matches 🏆",
       minAmount: "100",
       maxAmount: "100",
-      messageTemplate: "Platinum VIP Tips:\nReal Madrid vs Sevilla → 1\nBarcelona vs Betis → OVER 2.5\nBayern vs Dortmund → GG\nPSG vs Lyon → 1\nRef: {transaction_code} | Date: {date}",
+      messageTemplate: `JACKPOT MATCHES 🏆\nComplete jackpot predictions with carefully selected fixtures:\nMan City vs Arsenal -> 1X\nChelsea vs Liverpool -> GG\nReal Madrid vs Barca -> Over 2.5\nInter vs Milan -> 1\nBayern vs Dortmund -> 1X & Over 2.5\nNapoli vs Juventus -> 2X\nPSG vs Marseille -> 1\nAjax vs PSV -> Over 3.5\nPorto vs Benfica -> 1X\nCeltic vs Rangers -> 1\nMonaco vs Lyon -> GG\nValencia vs Sevilla -> 1X\nLazio vs Roma -> GG\nLeipzig vs Leverkusen -> Over 2.5\nAthletic vs Betis -> 1\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.`,
       isActive: true,
     },
     {
-      name: "Sapphire",
-      minAmount: "200",
-      maxAmount: "200",
-      messageTemplate: "Sapphire Exclusive Tips:\nInter Milan vs Lazio → 1X\nJuventus vs Roma → UNDER 3.5\nAC Milan vs Napoli → GG & OVER 2.5\nAtletico vs Valencia → 1\nReceipt: {transaction_code}",
+      name: "Basket Matches 🏀",
+      minAmount: "50",
+      maxAmount: "50",
+      messageTemplate: `BASKET MATCHES 🏀\nGet selected basketball predictions and expert picks:\nLakers vs Celtics -> Over 215.5 Points\nWarriors vs Bulls -> Warriors Win\nBucks vs Heat -> Bucks -4.5\nNets vs Knicks -> Over 210.0 Points\nSuns vs Mavericks -> Suns Win\nNuggets vs Clippers -> Over 220.5 Points\n76ers vs Hawks -> 76ers Win\nGrizzlies vs Kings -> Over 218.0 Points\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.`,
       isActive: true,
     },
     {
-      name: "Ruby",
+      name: "Weekly Subscription 📅",
       minAmount: "500",
       maxAmount: "500",
-      messageTemplate: "Ruby Premium Package:\nLiverpool vs Man Utd → 1X & OVER 1.5\nArsenal vs Tottenham → GG\nReal Madrid vs Barcelona → OVER 2.5\nLeverkusen vs Leipzig → 1\nDate: {date} | Ref: {transaction_code}",
+      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\n✓ Daily Matches\n✓ Jackpot Matches\n✓ Basketball Matches\nValid for 7 Days.\nThank you {customer_name} for subscribing with KES {amount}. Receipt: {transaction_code}.`,
       isActive: true,
     },
     {
-      name: "Emerald",
-      minAmount: "1000",
-      maxAmount: "1000",
-      messageTemplate: "Emerald Jackpot & Mega Tips:\nMan City vs Arsenal → 1X\nChelsea vs Liverpool → GG\nReal Madrid vs Bayern → 1\nPSG vs Dortmund → OVER 2.5\nInter vs Juventus → 1X\nReceipt: {transaction_code}",
+      name: "Monthly Subscription 📆",
+      minAmount: "1500",
+      maxAmount: "1500",
+      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\n✓ Daily Football Matches\n✓ Jackpot Matches\n✓ Basketball Matches\n✓ Premium Picks\n✓ Daily Updates\nValid for 30 Days.\nThank you {customer_name} for subscribing with KES {amount}. Receipt: {transaction_code}.`,
       isActive: true,
     },
   ];

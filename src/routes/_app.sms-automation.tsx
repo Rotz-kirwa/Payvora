@@ -121,39 +121,54 @@ const PLACEHOLDERS = [
 
 const TIER_PRESETS = [
   {
-    name: "Gold",
+    name: "Daily Matches ⚽",
     amount: "50",
-    icon: "🥇",
-    badgeBg: "bg-amber-500/10 text-amber-500 border-amber-500/30",
-    template: "Gold Tier Package:\nArsenal vs Everton → 1\nChelsea vs West Ham → OVER 2.5\nMan City vs Fulham → 1X\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}",
-  },
-  {
-    name: "Platinum",
-    amount: "100",
-    icon: "🥈",
-    badgeBg: "bg-slate-500/10 text-slate-300 border-slate-500/30",
-    template: "Platinum VIP Tips:\nReal Madrid vs Sevilla → 1\nBarcelona vs Betis → OVER 2.5\nBayern vs Dortmund → GG\nPSG vs Lyon → 1\nRef: {transaction_code} | Date: {date}",
-  },
-  {
-    name: "Sapphire",
-    amount: "200",
-    icon: "💎",
-    badgeBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    template: "Sapphire Exclusive Tips:\nInter Milan vs Lazio → 1X\nJuventus vs Roma → UNDER 3.5\nAC Milan vs Napoli → GG & OVER 2.5\nAtletico vs Valencia → 1\nReceipt: {transaction_code}",
-  },
-  {
-    name: "Ruby",
-    amount: "500",
-    icon: "❤️",
-    badgeBg: "bg-rose-500/10 text-rose-400 border-rose-500/30",
-    template: "Ruby Premium Package:\nLiverpool vs Man Utd → 1X & OVER 1.5\nArsenal vs Tottenham → GG\nReal Madrid vs Barcelona → OVER 2.5\nLeverkusen vs Leipzig → 1\nDate: {date} | Ref: {transaction_code}",
-  },
-  {
-    name: "Emerald",
-    amount: "1000",
-    icon: "🟢",
+    icon: "⚽",
     badgeBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
-    template: "Emerald Jackpot & Mega Tips:\nMan City vs Arsenal → 1X\nChelsea vs Liverpool → GG\nReal Madrid vs Bayern → 1\nPSG vs Dortmund → OVER 2.5\nInter vs Juventus → 1X\nReceipt: {transaction_code}",
+    description: "Short-term daily football predictions",
+    matches: "10 Matches",
+    validity: "24 Hours",
+    template: `DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nLiverpool vs Tottenham -> Liverpool Win (1)\nManchester City vs Newcastle -> Over 2.5 Goals\nManchester United vs Aston Villa -> Both Teams To Score (BTTS)\nReal Madrid vs Sevilla -> Real Madrid Win (1)\nBarcelona vs Villarreal -> Barcelona Win (1)\nBayern Munich vs Borussia Dortmund -> Over 2.5 Goals\nInter Milan vs AC Milan -> Inter Milan Win (1)\nPSG vs Lyon -> PSG Win (1)\nJuventus vs Napoli -> Both Teams To Score (BTTS)\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.`,
+  },
+  {
+    name: "Jackpot Matches 🏆",
+    amount: "100",
+    icon: "🏆",
+    badgeBg: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+    description: "Complete jackpot predictions list",
+    matches: "15 Fixtures",
+    validity: "Jackpot Access",
+    template: `JACKPOT MATCHES 🏆\nComplete jackpot predictions with carefully selected fixtures:\nMan City vs Arsenal -> 1X\nChelsea vs Liverpool -> GG\nReal Madrid vs Barca -> Over 2.5\nInter vs Milan -> 1\nBayern vs Dortmund -> 1X & Over 2.5\nNapoli vs Juventus -> 2X\nPSG vs Marseille -> 1\nAjax vs PSV -> Over 3.5\nPorto vs Benfica -> 1X\nCeltic vs Rangers -> 1\nMonaco vs Lyon -> GG\nValencia vs Sevilla -> 1X\nLazio vs Roma -> GG\nLeipzig vs Leverkusen -> Over 2.5\nAthletic vs Betis -> 1\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.`,
+  },
+  {
+    name: "Basket Matches 🏀",
+    amount: "50",
+    icon: "🏀",
+    badgeBg: "bg-orange-500/10 text-orange-400 border-orange-500/30",
+    description: "Daily basketball predictions and picks",
+    matches: "8 Matches",
+    validity: "24 Hours",
+    template: `BASKET MATCHES 🏀\nGet selected basketball predictions and expert picks:\nLakers vs Celtics -> Over 215.5 Points\nWarriors vs Bulls -> Warriors Win\nBucks vs Heat -> Bucks -4.5\nNets vs Knicks -> Over 210.0 Points\nSuns vs Mavericks -> Suns Win\nNuggets vs Clippers -> Over 220.5 Points\n76ers vs Hawks -> 76ers Win\nGrizzlies vs Kings -> Over 218.0 Points\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.`,
+  },
+  {
+    name: "Weekly Subscription 📅",
+    amount: "500",
+    icon: "📅",
+    badgeBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    description: "Full access to predictions for 7 days",
+    matches: "All Access",
+    validity: "7 Days",
+    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\n✓ Daily Matches\n✓ Jackpot Matches\n✓ Basketball Matches\nValid for 7 Days.\nThank you {customer_name} for subscribing with KES {amount}. Receipt: {transaction_code}.`,
+  },
+  {
+    name: "Monthly Subscription 📆",
+    amount: "1500",
+    icon: "📆",
+    badgeBg: "bg-purple-500/10 text-purple-400 border-purple-500/30",
+    description: "Complete premium access for 30 days",
+    matches: "All Access + Updates",
+    validity: "30 Days",
+    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\n✓ Daily Football Matches\n✓ Jackpot Matches\n✓ Basketball Matches\n✓ Premium Picks\n✓ Daily Updates\nValid for 30 Days.\nThank you {customer_name} for subscribing with KES {amount}. Receipt: {transaction_code}.`,
   },
 ];
 
@@ -1178,6 +1193,8 @@ function SmsAutomationPage() {
   const [activeTab, setActiveTab] = useState<"rules" | "logs">("rules");
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
+  const [previewRule, setPreviewRule] = useState<RuleRow | null>(null);
+
   const activeRules = useMemo(() => rules.filter((r) => r.isActive).length, [rules]);
 
   async function handleGlobalToggle() {
@@ -1235,12 +1252,12 @@ function SmsAutomationPage() {
   const [resettingTiers, setResettingTiers] = useState(false);
 
   async function handleResetDefaultTiers() {
-    if (!confirm("Reset all rules to default 5 Tiers (Gold, Platinum, Sapphire, Ruby, Emerald)?")) return;
+    if (!confirm("Reset rules to 5 OddsArena Packages (Daily, Jackpot, Basket, Weekly, Monthly)?")) return;
     setResettingTiers(true);
     try {
       const defaultRules = await resetDefaultTiersFn();
       setRules(defaultRules.sort((a, b) => a.minAmount - b.minAmount));
-      toast.success("Seeded 5 default rules (Gold, Platinum, Sapphire, Ruby, Emerald)");
+      toast.success("Seeded 5 OddsArena packages successfully!");
     } catch {
       toast.error("Failed to reset tier rules");
     } finally {
@@ -1265,12 +1282,68 @@ function SmsAutomationPage() {
         />
       )}
 
+      {/* Preview Modal */}
+      {previewRule && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xl">
+                  📱
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-foreground">{previewRule.name}</h3>
+                  <p className="text-xs text-muted-foreground font-mono">Price: KES {previewRule.minAmount}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPreviewRule(null)}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customer SMS Preview</span>
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap max-h-72 overflow-y-auto">
+                {buildPreview(previewRule.messageTemplate)}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs text-muted-foreground font-mono">
+                {previewRule.messageTemplate.length} chars ({Math.ceil(previewRule.messageTemplate.length / 160)} SMS)
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPreviewRule(null)}
+                  className="h-8 rounded-lg border border-border px-3.5 text-xs font-semibold hover:bg-secondary"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    const ruleToEdit = previewRule;
+                    setPreviewRule(null);
+                    setModal({ mode: "edit", rule: ruleToEdit });
+                  }}
+                  className="h-8 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow hover:bg-primary/90 transition-all"
+                >
+                  Edit Package
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">SMS Automation</h1>
+          <h1 className="text-2xl font-bold tracking-tight">OddsArena Package & SMS Automation</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Auto-send tier predictions and custom SMS when customer payments match a configured price.
+            Manage daily sports predictions, jackpot fixtures, basketball picks, and subscription packages.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1295,15 +1368,15 @@ function SmsAutomationPage() {
             {globalEnabled ? "Automation ON" : "Automation OFF"}
           </button>
 
-          {/* Reset 5 Tiers */}
+          {/* Reset 5 Packages */}
           <button
             onClick={handleResetDefaultTiers}
             disabled={resettingTiers}
-            title="Reset rules to standard 5 Tiers: Gold, Platinum, Sapphire, Ruby, Emerald"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-3.5 py-2 text-sm font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-60"
+            title="Reset rules to OddsArena 5 Packages (Daily, Jackpot, Basket, Weekly, Monthly)"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-3.5 py-2 text-sm font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-60 text-xs"
           >
             {resettingTiers ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            Reset 5 Tiers
+            Reset 5 Packages
           </button>
 
           <button
@@ -1311,34 +1384,98 @@ function SmsAutomationPage() {
             className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-sm"
             style={{ background: "var(--gradient-primary)" }}
           >
-            <Plus className="h-4 w-4" /> Add Rule
+            <Plus className="h-4 w-4" /> Add Package Rule
           </button>
         </div>
       </header>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {[
-          { label: "Active Rules", value: activeRules, icon: Zap, gradient: "primary" },
-          { label: "Total Rules", value: rules.length, icon: Bell, gradient: "blue" },
-          { label: "SMS Sent Today", value: stats.todaySent, icon: Send, gradient: "green" },
-          { label: "Total SMS Sent", value: stats.totalSent, icon: MessageSquare, gradient: "coral" },
-        ].map(({ label, value, icon: Icon, gradient }) => (
-          <div
-            key={label}
-            className="relative overflow-hidden rounded-2xl p-5 text-white shadow-[var(--shadow-card)]"
-            style={{ background: `var(--gradient-${gradient})` }}
-          >
-            <div className="pointer-events-none absolute -right-3 -top-3 h-16 w-16 rounded-full bg-white/10" />
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-white/80">{label}</p>
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/20">
-                <Icon className="h-3.5 w-3.5 text-white" />
-              </span>
-            </div>
-            <p className="mt-2 text-2xl font-bold">{value}</p>
-          </div>
-        ))}
+      {/* Package Dashboard Layout: 5 Large Category Cards */}
+      <div className="space-y-2">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <span>OddsArena Categories Overview</span>
+        </h2>
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
+          {TIER_PRESETS.map((preset) => {
+            const matchedRule = rules.find((r) => r.name.toLowerCase().includes(preset.name.toLowerCase().split(" ")[0]));
+            const isRuleActive = matchedRule ? matchedRule.isActive : true;
+
+            return (
+              <div
+                key={preset.name}
+                className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex flex-col justify-between hover:border-primary/50 transition-all group"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{preset.icon}</span>
+                    <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold border font-mono", preset.badgeBg)}>
+                      {KES(Number(preset.amount))}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-sm text-foreground">
+                      {preset.name}
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground leading-tight mt-1 line-clamp-2">
+                      {preset.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pt-1.5 border-t border-border/50">
+                    <span className="font-medium text-foreground">{preset.matches}</span>
+                    <span>{preset.validity}</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-1.5 pt-2 border-t border-border/40">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (matchedRule) {
+                        setPreviewRule(matchedRule);
+                      } else {
+                        toast.info(`Preview: ${preset.name}`);
+                      }
+                    }}
+                    className="flex-1 rounded-lg border border-border bg-secondary/50 py-1 text-[11px] font-semibold hover:bg-secondary text-foreground transition-colors"
+                  >
+                    Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (matchedRule) {
+                        setModal({ mode: "edit", rule: matchedRule });
+                      } else {
+                        handleSelectPreset(preset);
+                      }
+                    }}
+                    className="flex-1 rounded-lg bg-primary/10 text-primary border border-primary/20 py-1 text-[11px] font-semibold hover:bg-primary/20 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (matchedRule) {
+                        handleToggle(matchedRule);
+                      }
+                    }}
+                    title={isRuleActive ? "Deactivate package" : "Activate package"}
+                    className={cn(
+                      "rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors border",
+                      isRuleActive
+                        ? "bg-success/10 text-success border-success/30 hover:bg-success/20"
+                        : "bg-muted text-muted-foreground border-border hover:bg-secondary",
+                    )}
+                  >
+                    {isRuleActive ? "Active" : "Activate"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -1354,7 +1491,7 @@ function SmsAutomationPage() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {tab === "rules" ? `Rules (${rules.length})` : `SMS Logs (${stats.totalSent})`}
+            {tab === "rules" ? `Package Rules (${rules.length})` : `SMS Logs (${stats.totalSent})`}
           </button>
         ))}
       </div>
@@ -1369,14 +1506,14 @@ function SmsAutomationPage() {
               </div>
               <p className="text-base font-semibold">No rules yet</p>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Create your first SMS automation rule to start sending messages to customers.
+                Create your first SMS automation rule or reset to standard OddsArena packages.
               </p>
               <button
-                onClick={() => setModal({ mode: "add" })}
+                onClick={handleResetDefaultTiers}
                 className="mt-2 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white"
                 style={{ background: "var(--gradient-primary)" }}
               >
-                <Plus className="h-4 w-4" /> Add First Rule
+                <RefreshCw className="h-4 w-4" /> Seed 5 Packages
               </button>
             </div>
           ) : (
@@ -1384,8 +1521,8 @@ function SmsAutomationPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-secondary/30 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                    <th className="px-5 py-3 font-medium">Rule Name</th>
-                    <th className="px-5 py-3 font-medium">Amount Range</th>
+                    <th className="px-5 py-3 font-medium">Package Name</th>
+                    <th className="px-5 py-3 font-medium">Price</th>
                     <th className="px-5 py-3 font-medium">Message Preview</th>
                     <th className="px-5 py-3 font-medium">Status</th>
                     <th className="px-5 py-3 font-medium text-right">Actions</th>
@@ -1394,50 +1531,45 @@ function SmsAutomationPage() {
                 <tbody className="divide-y divide-border">
                   {rules.map((rule) => (
                     <tr key={rule.id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="px-5 py-3.5 font-semibold">{rule.name}</td>
+                      <td className="px-5 py-3.5">
+                        <p className="font-bold text-foreground flex items-center gap-1.5">
+                          {rule.name}
+                        </p>
+                      </td>
                       <td className="px-5 py-3.5 text-muted-foreground font-mono text-xs">
-                        {rule.minAmount === rule.maxAmount ? (
-                          <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                            {KES(rule.minAmount)} <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">Fixed</span>
-                          </span>
-                        ) : (
-                          `${KES(rule.minAmount)} – ${KES(rule.maxAmount)}`
-                        )}
+                        <span className="inline-flex items-center gap-1 font-semibold text-foreground bg-secondary/80 px-2 py-1 rounded-md border border-border">
+                          {KES(rule.minAmount)}
+                        </span>
                       </td>
                       <td className="px-5 py-3.5 max-w-xs">
-                        <p className="truncate text-xs text-muted-foreground" title={rule.messageTemplate}>
+                        <p className="truncate text-xs text-muted-foreground font-mono" title={rule.messageTemplate}>
                           {rule.messageTemplate}
                         </p>
                       </td>
                       <td className="px-5 py-3.5">
-                        <span
+                        <button
+                          onClick={() => handleToggle(rule)}
+                          disabled={togglingId === rule.id}
                           className={cn(
-                            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-all border",
                             rule.isActive
-                              ? "bg-success/10 text-success"
-                              : "bg-muted text-muted-foreground",
+                              ? "bg-success/10 text-success border-success/30 hover:bg-success/20"
+                              : "bg-muted text-muted-foreground border-border hover:bg-secondary",
                           )}
                         >
                           <span className={cn("h-1.5 w-1.5 rounded-full", rule.isActive ? "bg-success" : "bg-muted-foreground")} />
                           {rule.isActive ? "Active" : "Inactive"}
-                        </span>
+                        </button>
                       </td>
                       <td className="px-5 py-3.5">
-                        <div className="flex items-center justify-end gap-1">
-                          {/* Toggle */}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Preview */}
                           <button
-                            onClick={() => handleToggle(rule)}
-                            disabled={togglingId === rule.id}
-                            title={rule.isActive ? "Disable rule" : "Enable rule"}
-                            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-50 transition-colors"
+                            onClick={() => setPreviewRule(rule)}
+                            title="Preview customer message"
+                            className="rounded-lg border border-border bg-secondary/50 px-2 py-1 text-xs font-semibold text-foreground hover:bg-secondary transition-colors inline-flex items-center gap-1"
                           >
-                            {togglingId === rule.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : rule.isActive ? (
-                              <ToggleRight className="h-4 w-4 text-success" />
-                            ) : (
-                              <ToggleLeft className="h-4 w-4" />
-                            )}
+                            <Eye className="h-3.5 w-3.5 text-primary" /> Preview
                           </button>
                           {/* Edit */}
                           <button
