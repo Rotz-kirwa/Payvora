@@ -6,7 +6,7 @@ import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight, MessageSquare,
   Send, CheckCircle2, XCircle, AlertTriangle, Loader2, X,
   Zap, ZapOff, Bell, Clock, ChevronDown, ChevronUp, Target, SlidersHorizontal,
-  Wand2, Sparkles, RefreshCw, Layers, Table, FileText,
+  Wand2, Sparkles, RefreshCw, Layers, Table, FileText, ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -204,7 +204,120 @@ function buildPreview(template: string): string {
 
 type ModalMode = { mode: "add" } | { mode: "edit"; rule: RuleRow };
 
-type MatchRow = { id: string; team1: string; team2: string; pick: string };
+export function parseBulkMatchesText(rawText: string): MatchRow[] {
+  if (!rawText || !rawText.trim()) return [];
+
+  const lines = rawText.split("\n");
+  const matches: MatchRow[] = [];
+
+  for (const line of lines) {
+    let trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Remove leading list numbers like "1. ", "1\t", "1) ", "10 ", "* "
+    trimmed = trimmed.replace(/^[\d\*\-\•]+[\.\)\t\s]+\s*/, "");
+
+    // 1. Tab-separated format (Spreadsheets, tables, Excel)
+    if (trimmed.includes("\t")) {
+      const parts = trimmed.split("\t").map((p) => p.trim()).filter(Boolean);
+      const nonVsParts = parts.filter((p) => !/^(vs|v)\.?$/i.test(p));
+      if (nonVsParts.length >= 3) {
+        matches.push({
+          id: Math.random().toString(36).substring(2, 9),
+          team1: nonVsParts[0],
+          team2: nonVsParts[1],
+          pick: nonVsParts.slice(2).join(" "),
+        });
+        continue;
+      } else if (nonVsParts.length === 2) {
+        matches.push({
+          id: Math.random().toString(36).substring(2, 9),
+          team1: nonVsParts[0],
+          team2: nonVsParts[1],
+          pick: "1",
+        });
+        continue;
+      }
+    }
+
+    // 2. Standard text formatting
+    let rest = trimmed;
+    let pick = "";
+
+    if (rest.includes("->") || rest.includes("→")) {
+      const parts = rest.split(/->|→/);
+      rest = parts[0].trim();
+      pick = parts.slice(1).join("->").trim();
+    } else if (rest.includes(" - ")) {
+      const parts = rest.split(" - ");
+      rest = parts[0].trim();
+      pick = parts.slice(1).join(" - ").trim();
+    }
+
+    let team1 = "";
+    let team2 = "";
+
+    if (/\bvs\.?\b/i.test(rest)) {
+      const parts = rest.split(/\bvs\.?\b/i);
+      team1 = parts[0].trim();
+      const afterVs = parts[1].trim();
+
+      if (!pick) {
+        // Match prediction pattern in afterVs
+        const regex = /^(.*?)\s+((?:[A-Z0-9][a-zA-Z0-9\s]*\s+Win(?:\s*\([^\)]+\))?|Over\s+[\d\.]+\s*.*|Under\s+[\d\.]+\s*.*|Both\s+Teams\s+.*|GG|NG|BTTS|[12X]\b|\([^\)]+\)).*)$/i;
+        const match = afterVs.match(regex);
+
+        if (match && match[1].trim()) {
+          team2 = match[1].trim();
+          pick = match[2].trim();
+        } else {
+          const parenMatch = afterVs.match(/^(.*?)\s+(\([^\)]+\))$/);
+          if (parenMatch) {
+            const team2Candidate = parenMatch[1].trim();
+            const lastSpace = team2Candidate.lastIndexOf(" ");
+            if (lastSpace > 0) {
+              team2 = team2Candidate.slice(0, lastSpace).trim();
+              pick = `${team2Candidate.slice(lastSpace).trim()} ${parenMatch[2]}`;
+            } else {
+              team2 = team2Candidate;
+              pick = parenMatch[2];
+            }
+          } else {
+            const lastSpace = afterVs.lastIndexOf(" ");
+            if (lastSpace > 0) {
+              team2 = afterVs.slice(0, lastSpace).trim();
+              pick = afterVs.slice(lastSpace).trim();
+            } else {
+              team2 = afterVs;
+              pick = "1";
+            }
+          }
+        }
+      } else {
+        team2 = afterVs;
+      }
+    } else if (/\bv\.?\b/i.test(rest)) {
+      const parts = rest.split(/\bv\.?\b/i);
+      team1 = parts[0].trim();
+      team2 = parts[1].trim();
+      if (!pick) pick = "1";
+    } else {
+      team1 = rest;
+      if (!pick) pick = "1";
+    }
+
+    if (team1 || team2) {
+      matches.push({
+        id: Math.random().toString(36).substring(2, 9),
+        team1,
+        team2,
+        pick: pick || "1",
+      });
+    }
+  }
+
+  return matches;
+}
 
 function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tier Package:") {
   if (!rawTemplate || !rawTemplate.trim()) {
@@ -220,9 +333,9 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
   }
 
   const lines = rawTemplate.split("\n");
-  const matches: MatchRow[] = [];
   const headerLines: string[] = [];
   const footerLines: string[] = [];
+  const matchLines: string[] = [];
 
   let phase: "header" | "matches" | "footer" = "header";
 
@@ -230,39 +343,11 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    const isMatchLine = /\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→");
+    const isMatchLine = /\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→") || trimmed.includes("\t");
 
     if (isMatchLine) {
       phase = "matches";
-      let team1 = "";
-      let team2 = "";
-      let pick = "";
-
-      let rest = trimmed;
-      if (rest.includes("->") || rest.includes("→")) {
-        const parts = rest.split(/->|→/);
-        rest = parts[0].trim();
-        pick = parts.slice(1).join("->").trim();
-      }
-
-      if (/\bvs\b/i.test(rest)) {
-        const parts = rest.split(/\bvs\b/i);
-        team1 = parts[0].trim();
-        team2 = parts[1].trim();
-      } else if (/\bv\b/i.test(rest)) {
-        const parts = rest.split(/\bv\b/i);
-        team1 = parts[0].trim();
-        team2 = parts[1].trim();
-      } else {
-        team1 = rest;
-      }
-
-      matches.push({
-        id: Math.random().toString(36).substring(2, 9),
-        team1,
-        team2,
-        pick,
-      });
+      matchLines.push(line);
     } else {
       if (phase === "header") {
         headerLines.push(trimmed);
@@ -272,6 +357,8 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
       }
     }
   }
+
+  const matches = parseBulkMatchesText(matchLines.join("\n"));
 
   if (matches.length === 0) {
     matches.push(
@@ -376,6 +463,60 @@ function RuleModal({
     const updated = matchRows.filter((r) => r.id !== id);
     setMatchRows(updated);
     updateTemplateFromTable(headerText, updated, footerText);
+  }
+
+  // Paste Bulk Matches Handlers
+  const [showPasteBox, setShowPasteBox] = useState(false);
+  const [pasteInput, setPasteInput] = useState("");
+
+  function handleImportPastedText() {
+    if (!pasteInput.trim()) {
+      toast.error("Please paste match text first.");
+      return;
+    }
+    const parsed = parseBulkMatchesText(pasteInput);
+    if (parsed.length === 0) {
+      toast.error("No valid matches found in pasted text.");
+      return;
+    }
+
+    setMatchRows((prev) => {
+      const isPlaceholderOnly =
+        prev.length === 3 &&
+        prev[0].team1 === "Arsenal" &&
+        prev[0].team2 === "Everton" &&
+        prev[1].team1 === "Chelsea";
+
+      const updated = isPlaceholderOnly ? parsed : [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
+      updateTemplateFromTable(headerText, updated, footerText);
+      return updated;
+    });
+
+    toast.success(`Parsed and imported ${parsed.length} match(es) into table!`);
+    setPasteInput("");
+    setShowPasteBox(false);
+  }
+
+  function handleCellPaste(e: React.ClipboardEvent) {
+    const text = e.clipboardData.getData("text");
+    if (text && text.includes("\n")) {
+      e.preventDefault();
+      const parsed = parseBulkMatchesText(text);
+      if (parsed.length > 0) {
+        setMatchRows((prev) => {
+          const isPlaceholderOnly =
+            prev.length === 3 &&
+            prev[0].team1 === "Arsenal" &&
+            prev[0].team2 === "Everton" &&
+            prev[1].team1 === "Chelsea";
+
+          const updated = isPlaceholderOnly ? parsed : [...prev.filter((r) => r.team1.trim() || r.team2.trim()), ...parsed];
+          updateTemplateFromTable(headerText, updated, footerText);
+          return updated;
+        });
+        toast.success(`Auto-parsed and imported ${parsed.length} match(es) from clipboard!`);
+      }
+    }
   }
 
   function insertTag(tag: string) {
@@ -711,6 +852,7 @@ function RuleModal({
                                 type="text"
                                 value={m.team1}
                                 onChange={(e) => handleMatchRowChange(m.id, "team1", e.target.value)}
+                                onPaste={handleCellPaste}
                                 placeholder="e.g. Arsenal"
                                 className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-semibold outline-none focus:border-primary"
                               />
@@ -723,6 +865,7 @@ function RuleModal({
                                 type="text"
                                 value={m.team2}
                                 onChange={(e) => handleMatchRowChange(m.id, "team2", e.target.value)}
+                                onPaste={handleCellPaste}
                                 placeholder="e.g. Everton"
                                 className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-semibold outline-none focus:border-primary"
                               />
@@ -732,6 +875,7 @@ function RuleModal({
                                 type="text"
                                 value={m.pick}
                                 onChange={(e) => handleMatchRowChange(m.id, "pick", e.target.value)}
+                                onPaste={handleCellPaste}
                                 placeholder="e.g. 1 / Over 2.5 / GG"
                                 className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-mono font-bold text-primary outline-none focus:border-primary"
                               />
@@ -752,13 +896,61 @@ function RuleModal({
                     </table>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleAddMatchRow}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-500 hover:bg-emerald-500/20 transition-all"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> Add Match Fixture Row
-                  </button>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAddMatchRow}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-500 hover:bg-emerald-500/20 transition-all"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add Match Fixture Row
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowPasteBox(!showPasteBox)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all"
+                    >
+                      <ClipboardList className="h-3.5 w-3.5" /> Paste Multiple Games
+                    </button>
+                  </div>
+
+                  {showPasteBox && (
+                    <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                          <ClipboardList className="h-4 w-4" />
+                          Paste Bulk Matches List
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowPasteBox(false)}
+                          className="text-[11px] text-muted-foreground hover:text-foreground"
+                        >
+                          Close
+                        </button>
+                      </div>
+                      <textarea
+                        rows={4}
+                        value={pasteInput}
+                        onChange={(e) => setPasteInput(e.target.value)}
+                        placeholder="Paste your copied matches here...&#10;Arsenal vs Chelsea Arsenal Win (1)&#10;2 Liverpool vs Tottenham Liverpool Win (1)&#10;3 Manchester City vs Newcastle Over 2.5 Goals"
+                        className="w-full rounded-lg border border-border bg-background p-2.5 text-xs font-mono outline-none focus:border-primary"
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground">
+                          Auto-detects teams, vs, row numbers & picks!
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleImportPastedText}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1 text-xs font-bold text-primary-foreground shadow hover:bg-primary/90 transition-all"
+                        >
+                          <Wand2 className="h-3.5 w-3.5" />
+                          Import Matches to Table
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer Input */}
