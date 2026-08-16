@@ -222,6 +222,51 @@ export async function deleteRule(id: string): Promise<void> {
   await db.delete(smsAutomationRules).where(eq(smsAutomationRules.id, id));
 }
 
+export async function resetDefaultTiers(): Promise<RuleRow[]> {
+  await db.delete(smsAutomationRules);
+
+  const defaultTiers = [
+    {
+      name: "Gold",
+      minAmount: "50",
+      maxAmount: "50",
+      messageTemplate: "Gold Tier Package:\nArsenal vs Everton → 1\nChelsea vs West Ham → OVER 2.5\nMan City vs Fulham → 1X\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}",
+      isActive: true,
+    },
+    {
+      name: "Platinum",
+      minAmount: "100",
+      maxAmount: "100",
+      messageTemplate: "Platinum VIP Tips:\nReal Madrid vs Sevilla → 1\nBarcelona vs Betis → OVER 2.5\nBayern vs Dortmund → GG\nPSG vs Lyon → 1\nRef: {transaction_code} | Date: {date}",
+      isActive: true,
+    },
+    {
+      name: "Sapphire",
+      minAmount: "200",
+      maxAmount: "200",
+      messageTemplate: "Sapphire Exclusive Tips:\nInter Milan vs Lazio → 1X\nJuventus vs Roma → UNDER 3.5\nAC Milan vs Napoli → GG & OVER 2.5\nAtletico vs Valencia → 1\nReceipt: {transaction_code}",
+      isActive: true,
+    },
+    {
+      name: "Ruby",
+      minAmount: "500",
+      maxAmount: "500",
+      messageTemplate: "Ruby Premium Package:\nLiverpool vs Man Utd → 1X & OVER 1.5\nArsenal vs Tottenham → GG\nReal Madrid vs Barcelona → OVER 2.5\nLeverkusen vs Leipzig → 1\nDate: {date} | Ref: {transaction_code}",
+      isActive: true,
+    },
+    {
+      name: "Emerald",
+      minAmount: "1000",
+      maxAmount: "1000",
+      messageTemplate: "Emerald Jackpot & Mega Tips:\nMan City vs Arsenal → 1X\nChelsea vs Liverpool → GG\nReal Madrid vs Bayern → 1\nPSG vs Dortmund → OVER 2.5\nInter vs Juventus → 1X\nReceipt: {transaction_code}",
+      isActive: true,
+    },
+  ];
+
+  const inserted = await db.insert(smsAutomationRules).values(defaultTiers).returning();
+  return inserted.map(toRuleRow);
+}
+
 export async function toggleRuleStatus(
   id: string,
   isActive: boolean,

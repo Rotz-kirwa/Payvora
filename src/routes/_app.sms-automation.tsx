@@ -6,6 +6,7 @@ import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight, MessageSquare,
   Send, CheckCircle2, XCircle, AlertTriangle, Loader2, X,
   Zap, ZapOff, Bell, Clock, ChevronDown, ChevronUp, Target, SlidersHorizontal,
+  Wand2, Sparkles, RefreshCw, Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -23,6 +24,13 @@ const fetchSmsDataFn = createServerFn({ method: "GET" }).handler(async () => {
     fetchAllRules(), fetchRecentLogs(50), fetchLogStats(), getSmsAutomationEnabled(),
   ]);
   return { rules, logs, stats, globalEnabled };
+});
+
+const resetDefaultTiersFn = createServerFn({ method: "POST" }).handler(async () => {
+  const { requireCurrentUser } = await import("../lib/auth.server");
+  await requireCurrentUser();
+  const { resetDefaultTiers } = await import("../lib/sms-automation.server");
+  return resetDefaultTiers();
 });
 
 const setGlobalAutomationFn = createServerFn({ method: "POST" })
@@ -111,14 +119,75 @@ const PLACEHOLDERS = [
   { tag: "{business_name}", desc: "Business name" },
 ];
 
-function buildPreview(template: string): string {
-  return template
-    .replace(/\{customer_name\}/gi, "John Doe")
-    .replace(/\{phone\}/gi, "254712345678")
-    .replace(/\{amount\}/gi, "150.00")
-    .replace(/\{transaction_code\}/gi, "RGK7X2Y9AB")
-    .replace(/\{date\}/gi, "02 May 2026, 14:30")
-    .replace(/\{business_name\}/gi, "MOBOSOFT ENTERPRISE HQ");
+const TIER_PRESETS = [
+  {
+    name: "Gold",
+    amount: "50",
+    icon: "🥇",
+    badgeBg: "bg-amber-500/10 text-amber-500 border-amber-500/30",
+    template: "Gold Tier Package:\nArsenal vs Everton → 1\nChelsea vs West Ham → OVER 2.5\nMan City vs Fulham → 1X\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}",
+  },
+  {
+    name: "Platinum",
+    amount: "100",
+    icon: "🥈",
+    badgeBg: "bg-slate-500/10 text-slate-300 border-slate-500/30",
+    template: "Platinum VIP Tips:\nReal Madrid vs Sevilla → 1\nBarcelona vs Betis → OVER 2.5\nBayern vs Dortmund → GG\nPSG vs Lyon → 1\nRef: {transaction_code} | Date: {date}",
+  },
+  {
+    name: "Sapphire",
+    amount: "200",
+    icon: "💎",
+    badgeBg: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    template: "Sapphire Exclusive Tips:\nInter Milan vs Lazio → 1X\nJuventus vs Roma → UNDER 3.5\nAC Milan vs Napoli → GG & OVER 2.5\nAtletico vs Valencia → 1\nReceipt: {transaction_code}",
+  },
+  {
+    name: "Ruby",
+    amount: "500",
+    icon: "❤️",
+    badgeBg: "bg-rose-500/10 text-rose-400 border-rose-500/30",
+    template: "Ruby Premium Package:\nLiverpool vs Man Utd → 1X & OVER 1.5\nArsenal vs Tottenham → GG\nReal Madrid vs Barcelona → OVER 2.5\nLeverkusen vs Leipzig → 1\nDate: {date} | Ref: {transaction_code}",
+  },
+  {
+    name: "Emerald",
+    amount: "1000",
+    icon: "🟢",
+    badgeBg: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+    template: "Emerald Jackpot & Mega Tips:\nMan City vs Arsenal → 1X\nChelsea vs Liverpool → GG\nReal Madrid vs Bayern → 1\nPSG vs Dortmund → OVER 2.5\nInter vs Juventus → 1X\nReceipt: {transaction_code}",
+  },
+];
+
+export function formatAndCleanMatchLines(text: string): string {
+  if (!text.trim()) return text;
+  const lines = text.split("\n");
+  const cleaned = lines.map((line) => {
+    let trimmed = line.trim();
+    if (!trimmed) return "";
+    // Remove list markers like "1. ", "- ", "* "
+    trimmed = trimmed.replace(/^[\d\*\-\•]+\.\s*/, "").replace(/^[\*\-\•]\s*/, "");
+    // Replace custom separators (->, =>, -, :) with standard arrow '→'
+    trimmed = trimmed.replace(/\s*(?:->|=>|–|—|:)\s*/g, " → ");
+    // If line contains 'vs' or 'v' without arrow, split prediction at the end
+    if (!trimmed.includes("→")) {
+      const match = trimmed.match(/^(.+?\s+(?:vs\.?|v)\s+.+?)\s+([12X|gg|ng|over|under|draw]+.*)$/i);
+      if (match) {
+        trimmed = `${match[1].trim()} → ${match[2].trim().toUpperCase()}`;
+      }
+    }
+    // Format team names and prediction
+    if (trimmed.includes("→")) {
+      const parts = trimmed.split("→");
+      const teams = parts[0].trim();
+      const tip = parts.slice(1).join("→").trim();
+      const formattedTeams = teams.replace(/\b\w+/g, (w) => {
+        if (["vs", "v"].includes(w.toLowerCase())) return "vs";
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      });
+      return `${formattedTeams} → ${tip.toUpperCase()}`;
+    }
+    return trimmed;
+  });
+  return cleaned.filter(Boolean).join("\n");
 }
 
 // ─── Rule Modal ───────────────────────────────────────────────────────────────
@@ -224,13 +293,27 @@ function RuleModal({
     }
   }
 
+  function handleSelectPreset(preset: typeof TIER_PRESETS[number]) {
+    setName(preset.name);
+    setAmountMode("fixed");
+    setFixedAmount(preset.amount);
+    setTemplate(preset.template);
+    toast.info(`Loaded ${preset.name} (${KES(Number(preset.amount))}) Tier preset`);
+  }
+
+  function handleCleanFormat() {
+    const formatted = formatAndCleanMatchLines(template);
+    setTemplate(formatted);
+    toast.success("Match lines formatted and aligned!");
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="w-full max-w-xl rounded-2xl border border-border bg-card shadow-[var(--shadow-lg)] flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4 shrink-0">
           <h2 className="text-base font-semibold">
-            {editing ? "Edit Rule" : "Add SMS Automation Rule"}
+            {editing ? "Edit SMS Rule" : "Add SMS Automation Rule"}
           </h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary">
             <X className="h-4 w-4" />
@@ -239,14 +322,41 @@ function RuleModal({
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+          {/* Quick Tier Presets */}
+          {!editing && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                <span>Quick Tier Presets</span>
+                <span className="text-[10px] lowercase text-muted-foreground font-normal">(click to auto-fill)</span>
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {TIER_PRESETS.map((p) => (
+                  <button
+                    key={p.name}
+                    type="button"
+                    onClick={() => handleSelectPreset(p)}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all hover:scale-[1.02]",
+                      p.badgeBg,
+                    )}
+                  >
+                    <span>{p.icon}</span>
+                    <span>{p.name}</span>
+                    <span className="font-mono text-[11px]">({KES(Number(p.amount))})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Name + Status row */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rule Name</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rule Tier Name</label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. KES 150 Standard Package"
+                placeholder="e.g. Gold, Platinum, Sapphire..."
                 className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
               />
             </div>
@@ -309,7 +419,7 @@ function RuleModal({
                 type="number" min="1" step="any"
                 value={fixedAmount}
                 onChange={(e) => setFixedAmount(e.target.value)}
-                placeholder="e.g. 150"
+                placeholder="e.g. 50"
                 className="mt-1.5 h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary"
               />
             </div>
@@ -338,22 +448,34 @@ function RuleModal({
             </div>
           )}
 
-          {/* Message template */}
+          {/* Message template & Match Line Aligner */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5 text-primary" />
                 SMS Message Template
               </label>
-              <span className={cn("text-xs", charCount > 460 ? "text-destructive" : "text-muted-foreground")}>
-                {charCount}/480
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCleanFormat}
+                  title="Auto-align and clean multi-line match predictions"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-2 py-0.5 rounded-md transition-colors"
+                >
+                  <Wand2 className="h-3 w-3" />
+                  Format & Align Matches
+                </button>
+                <span className={cn("text-xs font-mono", charCount > 460 ? "text-destructive" : "text-muted-foreground")}>
+                  {charCount}/480 ({Math.ceil(charCount / 160) || 1} SMS)
+                </span>
+              </div>
             </div>
             <textarea
               value={template}
               onChange={(e) => setTemplate(e.target.value)}
-              rows={4}
-              placeholder="Type your SMS message…"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary resize-none"
+              rows={5}
+              placeholder="Paste matches e.g.:&#10;Chelsea vs Liverpool 2X&#10;Arsenal vs Everton 1&#10;&#10;Or type your custom message..."
+              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-mono leading-relaxed outline-none focus:border-primary resize-none"
             />
 
             {/* Placeholder insert buttons */}
@@ -575,6 +697,22 @@ function SmsAutomationPage() {
     }
   }
 
+  const [resettingTiers, setResettingTiers] = useState(false);
+
+  async function handleResetDefaultTiers() {
+    if (!confirm("Reset all rules to default 5 Tiers (Gold, Platinum, Sapphire, Ruby, Emerald)?")) return;
+    setResettingTiers(true);
+    try {
+      const defaultRules = await resetDefaultTiersFn();
+      setRules(defaultRules.sort((a, b) => a.minAmount - b.minAmount));
+      toast.success("Seeded 5 default rules (Gold, Platinum, Sapphire, Ruby, Emerald)");
+    } catch {
+      toast.error("Failed to reset tier rules");
+    } finally {
+      setResettingTiers(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {modal && (
@@ -597,7 +735,7 @@ function SmsAutomationPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">SMS Automation</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Auto-send SMS messages to customers when payments match a configured range.
+            Auto-send tier predictions and custom SMS when customer payments match a configured price.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -620,6 +758,17 @@ function SmsAutomationPage() {
               <ZapOff className="h-4 w-4" />
             )}
             {globalEnabled ? "Automation ON" : "Automation OFF"}
+          </button>
+
+          {/* Reset 5 Tiers */}
+          <button
+            onClick={handleResetDefaultTiers}
+            disabled={resettingTiers}
+            title="Reset rules to standard 5 Tiers: Gold, Platinum, Sapphire, Ruby, Emerald"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-secondary px-3.5 py-2 text-sm font-semibold hover:bg-secondary/80 transition-colors disabled:opacity-60"
+          >
+            {resettingTiers ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Reset 5 Tiers
           </button>
 
           <button
