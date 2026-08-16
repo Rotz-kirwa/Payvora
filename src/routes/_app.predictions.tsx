@@ -109,10 +109,14 @@ const deleteJackpotFn = createServerFn({ method: "POST" })
 
 // ─── Route Definition ─────────────────────────────────────────────────────────
 
+import { redirect } from "@tanstack/react-router";
+
 export const Route = createFileRoute("/_app/predictions")({
+  beforeLoad: () => {
+    throw redirect({ to: "/sms-automation" });
+  },
   loader: () => fetchPredictionsDataFn(),
-  component: PredictionsPage,
-  head: () => ({ meta: [{ title: "Predictions & OddsArena — Payvora Admin" }] }),
+  component: () => null,
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
