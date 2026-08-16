@@ -1408,11 +1408,14 @@ function SmsAutomationPage() {
       </header>
 
       {/* Package Dashboard Layout: 5 Large Category Cards */}
-      <div className="space-y-2">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-          <span>OddsArena Categories Overview</span>
-        </h2>
-        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <span>OddsArena Categories Overview</span>
+          </h2>
+          <span className="text-[11px] text-muted-foreground font-mono">5 Active Packages</span>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           {TIER_PRESETS.map((preset) => {
             const matchedRule = rules.find((r) => r.name.toLowerCase().includes(preset.name.toLowerCase().split(" ")[0]));
             const isRuleActive = matchedRule ? matchedRule.isActive : true;
@@ -1420,32 +1423,32 @@ function SmsAutomationPage() {
             return (
               <div
                 key={preset.name}
-                className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex flex-col justify-between hover:border-primary/50 transition-all group"
+                className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-card)] flex flex-col justify-between hover:border-primary/50 transition-all min-w-0 group"
               >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl">{preset.icon}</span>
-                    <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold border font-mono", preset.badgeBg)}>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-2xl shrink-0">{preset.icon}</span>
+                    <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold border font-mono shrink-0 whitespace-nowrap", preset.badgeBg)}>
                       {KES(Number(preset.amount))}
                     </span>
                   </div>
 
-                  <div>
-                    <h3 className="font-bold text-sm text-foreground">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-sm text-foreground truncate" title={preset.name}>
                       {preset.name}
                     </h3>
-                    <p className="text-[11px] text-muted-foreground leading-tight mt-1 line-clamp-2">
+                    <p className="text-[11px] text-muted-foreground leading-snug mt-1 line-clamp-2 min-h-[32px]">
                       {preset.description}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pt-1.5 border-t border-border/50">
-                    <span className="font-medium text-foreground">{preset.matches}</span>
-                    <span>{preset.validity}</span>
+                  <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pt-2 border-t border-border/50">
+                    <span className="font-medium text-foreground truncate">{preset.matches}</span>
+                    <span className="shrink-0">{preset.validity}</span>
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between gap-1.5 pt-2 border-t border-border/40">
+                <div className="mt-3.5 flex items-center justify-between gap-1.5 pt-2.5 border-t border-border/40">
                   <button
                     type="button"
                     onClick={() => {
@@ -1455,7 +1458,7 @@ function SmsAutomationPage() {
                         toast.info(`Preview: ${preset.name}`);
                       }
                     }}
-                    className="flex-1 rounded-lg border border-border bg-secondary/50 py-1 text-[11px] font-semibold hover:bg-secondary text-foreground transition-colors"
+                    className="flex-1 min-w-0 rounded-lg border border-border bg-secondary/50 py-1.5 px-1 text-xs font-semibold hover:bg-secondary text-foreground transition-colors text-center truncate"
                   >
                     Preview
                   </button>
@@ -1468,7 +1471,7 @@ function SmsAutomationPage() {
                         setModal({ mode: "add", initialPreset: preset });
                       }
                     }}
-                    className="flex-1 rounded-lg bg-primary/10 text-primary border border-primary/20 py-1 text-[11px] font-semibold hover:bg-primary/20 transition-colors"
+                    className="flex-1 min-w-0 rounded-lg bg-primary/10 text-primary border border-primary/20 py-1.5 px-1 text-xs font-semibold hover:bg-primary/20 transition-colors text-center truncate"
                   >
                     Edit
                   </button>
@@ -1481,7 +1484,7 @@ function SmsAutomationPage() {
                     }}
                     title={isRuleActive ? "Deactivate package" : "Activate package"}
                     className={cn(
-                      "rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors border",
+                      "flex-1 min-w-0 rounded-lg py-1.5 px-1 text-xs font-semibold transition-colors border text-center truncate",
                       isRuleActive
                         ? "bg-success/10 text-success border-success/30 hover:bg-success/20"
                         : "bg-muted text-muted-foreground border-border hover:bg-secondary",
