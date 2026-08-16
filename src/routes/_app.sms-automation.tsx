@@ -47,7 +47,7 @@ const ruleSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   minAmount: z.number().positive("Must be positive"),
   maxAmount: z.number().positive("Must be positive"),
-  messageTemplate: z.string().min(5, "Message too short").max(480, "Max 480 characters"),
+  messageTemplate: z.string().min(5, "Message too short").max(2000, "Max 2000 characters"),
   isActive: z.boolean(),
 });
 
@@ -207,7 +207,20 @@ type ModalMode = { mode: "add" } | { mode: "edit"; rule: RuleRow };
 export function parseBulkMatchesText(rawText: string): MatchRow[] {
   if (!rawText || !rawText.trim()) return [];
 
-  const lines = rawText.split("\n");
+  let textToParse = rawText.trim();
+
+  // If single-line or concatenated multi-match text without explicit newlines
+  if (!textToParse.includes("\n")) {
+    // Add newlines before list numbers like " 2 ", " 3 ", " 10 "
+    textToParse = textToParse.replace(/\s+(\d+)[\.\)\s]+([A-Z0-9])/gi, "\n$1 $2");
+
+    // If still no newlines and multiple "vs" exist, insert newlines before team names preceding 'vs'
+    if (!textToParse.includes("\n") && (textToParse.match(/\bvs\.?\b/gi) || []).length > 1) {
+      textToParse = textToParse.replace(/(\S+\s+vs\s+.*?)(?=\s+[A-Z0-9][a-zA-Z0-9\s]*?\s+vs\b)/gi, "$1\n");
+    }
+  }
+
+  const lines = textToParse.split("\n");
   const matches: MatchRow[] = [];
 
   for (const line of lines) {
@@ -442,6 +455,23 @@ function RuleModal({
   }
 
   function handleMatchRowChange(id: string, field: "team1" | "team2" | "pick", value: string) {
+    const vsCount = (value.match(/\bvs\.?\b/gi) || []).length;
+    const hasMultipleGames = value.includes("\n") || value.includes("\t") || vsCount > 1 || (vsCount === 1 && field === "team1" && value.length > 25);
+
+    if (hasMultipleGames) {
+      const parsed = parseBulkMatchesText(value);
+      if (parsed.length > 0) {
+        setMatchRows((prev) => {
+          const filtered = prev.filter((r) => r.id !== id && (r.team1.trim() || r.team2.trim()));
+          const updated = [...filtered, ...parsed];
+          updateTemplateFromTable(headerText, updated, footerText);
+          return updated;
+        });
+        toast.success(`Auto-split and imported ${parsed.length} match(es)!`);
+        return;
+      }
+    }
+
     const updated = matchRows.map((r) => (r.id === id ? { ...r, [field]: value } : r));
     setMatchRows(updated);
     updateTemplateFromTable(headerText, updated, footerText);
@@ -499,7 +529,8 @@ function RuleModal({
 
   function handleCellPaste(e: React.ClipboardEvent) {
     const text = e.clipboardData.getData("text");
-    if (text && text.includes("\n")) {
+    const vsCount = (text.match(/\bvs\.?\b/gi) || []).length;
+    if (text && (text.includes("\n") || text.includes("\t") || vsCount >= 1 || text.length > 25)) {
       e.preventDefault();
       const parsed = parseBulkMatchesText(text);
       if (parsed.length > 0) {
@@ -795,8 +826,8 @@ function RuleModal({
                   <Wand2 className="h-3 w-3" />
                   Format
                 </button>
-                <span className={cn("text-xs font-mono", charCount > 460 ? "text-destructive" : "text-muted-foreground")}>
-                  {charCount}/480 ({Math.ceil(charCount / 160) || 1} SMS)
+                <span className={cn("text-xs font-mono", charCount > 1950 ? "text-destructive" : "text-muted-foreground")}>
+                  {charCount}/2000 ({Math.ceil(charCount / 160) || 1} SMS)
                 </span>
               </div>
             </div>
