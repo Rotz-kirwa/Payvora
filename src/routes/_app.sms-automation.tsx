@@ -142,7 +142,7 @@ const TIER_PRESETS = [
     description: "Short-term daily football predictions",
     matches: "10 Matches",
     validity: "24 Hours",
-    template: `DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nLiverpool vs Tottenham -> Liverpool Win (1)\nManchester City vs Newcastle -> Over 2.5 Goals\nManchester United vs Aston Villa -> Both Teams To Score (BTTS)\nReal Madrid vs Sevilla -> Real Madrid Win (1)\nBarcelona vs Villarreal -> Barcelona Win (1)\nBayern Munich vs Borussia Dortmund -> Over 2.5 Goals\nInter Milan vs AC Milan -> Inter Milan Win (1)\nPSG vs Lyon -> PSG Win (1)\nJuventus vs Napoli -> Both Teams To Score (BTTS)\n🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!`,
+    template: `DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nLiverpool vs Tottenham -> Liverpool Win (1)\nManchester City vs Newcastle -> Over 2.5 Goals\nManchester United vs Aston Villa -> Both Teams To Score (BTTS)\nReal Madrid vs Sevilla -> Real Madrid Win (1)\nBarcelona vs Villarreal -> Barcelona Win (1)\nBayern Munich vs Borussia Dortmund -> Over 2.5 Goals\nInter Milan vs AC Milan -> Inter Milan Win (1)\nPSG vs Lyon -> PSG Win (1)\nJuventus vs Napoli -> Both Teams To Score (BTTS)\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Jackpot Matches 🏆",
@@ -152,7 +152,7 @@ const TIER_PRESETS = [
     description: "Complete jackpot predictions list",
     matches: "15 Fixtures",
     validity: "Jackpot Access",
-    template: `JACKPOT MATCHES 🏆\nComplete jackpot predictions with carefully selected fixtures:\nMan City vs Arsenal -> 1X\nChelsea vs Liverpool -> GG\nReal Madrid vs Barca -> Over 2.5\nInter vs Milan -> 1\nBayern vs Dortmund -> 1X & Over 2.5\nNapoli vs Juventus -> 2X\nPSG vs Marseille -> 1\nAjax vs PSV -> Over 3.5\nPorto vs Benfica -> 1X\nCeltic vs Rangers -> 1\nMonaco vs Lyon -> GG\nValencia vs Sevilla -> 1X\nLazio vs Roma -> GG\nLeipzig vs Leverkusen -> Over 2.5\nAthletic vs Betis -> 1\n🍀 Best of luck with your Jackpot predictions! Win big with OddsArena!`,
+    template: `JACKPOT MATCHES 🏆\nComplete jackpot predictions with carefully selected fixtures:\nMan City vs Arsenal -> 1X\nChelsea vs Liverpool -> GG\nReal Madrid vs Barca -> Over 2.5\nInter vs Milan -> 1\nBayern vs Dortmund -> 1X & Over 2.5\nNapoli vs Juventus -> 2X\nPSG vs Marseille -> 1\nAjax vs PSV -> Over 3.5\nPorto vs Benfica -> 1X\nCeltic vs Rangers -> 1\nMonaco vs Lyon -> GG\nValencia vs Sevilla -> 1X\nLazio vs Roma -> GG\nLeipzig vs Leverkusen -> Over 2.5\nAthletic vs Betis -> 1\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Basket Matches 🏀",
@@ -162,7 +162,7 @@ const TIER_PRESETS = [
     description: "Daily basketball predictions and picks",
     matches: "8 Matches",
     validity: "24 Hours",
-    template: `BASKET MATCHES 🏀\nGet selected basketball predictions and expert picks:\nLakers vs Celtics -> Over 215.5 Points\nWarriors vs Bulls -> Warriors Win\nBucks vs Heat -> Bucks -4.5\nNets vs Knicks -> Over 210.0 Points\nSuns vs Mavericks -> Suns Win\nNuggets vs Clippers -> Over 220.5 Points\n76ers vs Hawks -> 76ers Win\nGrizzlies vs Kings -> Over 218.0 Points\n🔥 Good luck with your basketball picks today! Bet responsibly with OddsArena!`,
+    template: `BASKET MATCHES 🏀\nGet selected basketball predictions and expert picks:\nLakers vs Celtics -> Over 215.5 Points\nWarriors vs Bulls -> Warriors Win\nBucks vs Heat -> Bucks -4.5\nNets vs Knicks -> Over 210.0 Points\nSuns vs Mavericks -> Suns Win\nNuggets vs Clippers -> Over 220.5 Points\n76ers vs Hawks -> 76ers Win\nGrizzlies vs Kings -> Over 218.0 Points\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Weekly Subscription 📅",
@@ -172,7 +172,7 @@ const TIER_PRESETS = [
     description: "Full access to predictions for 7 days",
     matches: "All Access",
     validity: "7 Days",
-    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\n✓ Daily Matches\n✓ Jackpot Matches\n✓ Basketball Matches\nValid for 7 Days.\n🚀 Good luck with your weekly predictions! Enjoy premium picks from OddsArena!`,
+    template: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\n✓ Daily Matches\n✓ Jackpot Matches\n✓ Basketball Matches\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
   },
   {
     name: "Monthly Subscription 📆",
@@ -182,7 +182,7 @@ const TIER_PRESETS = [
     description: "Complete premium access for 30 days",
     matches: "All Access + Updates",
     validity: "30 Days",
-    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\n✓ Daily Football Matches\n✓ Jackpot Matches\n✓ Basketball Matches\n✓ Premium Picks\n✓ Daily Updates\nValid for 30 Days.\n👑 Best of luck with your monthly VIP predictions! Win big with OddsArena!`,
+    template: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\n✓ Daily Football Matches\n✓ Jackpot Matches\n✓ Basketball Matches\n✓ Premium Picks\n✓ Daily Updates\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
   },
 ];
 
@@ -221,7 +221,8 @@ export function formatAndCleanMatchLines(text: string): string {
 
 function buildPreview(template: string): string {
   return template
-    .replace(/Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi, "🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!")
+    .replace(/Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi, "🏆 Play Smart, Win Big")
+    .replace(/(🔥|🍀|🚀|👑)?\s*(Good luck|Best of luck)[^\n]*/gi, "🏆 Play Smart, Win Big")
     .replace(/\{customer_name\}/gi, "John Doe")
     .replace(/\{phone\}/gi, "254712345678")
     .replace(/\{amount\}/gi, "150.00")
@@ -371,7 +372,7 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
         { id: "m2", team1: "Chelsea", team2: "West Ham", pick: "Over 2.5" },
         { id: "m3", team1: "Man City", team2: "Fulham", pick: "1X" },
       ],
-      footer: "🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!",
+      footer: "🏆 Play Smart, Win Big",
     };
   }
 
@@ -412,15 +413,17 @@ function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tie
   }
 
   const rawFooter = footerLines.join("\n");
-  const cleanedFooter = rawFooter.replace(
-    /Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi,
-    "🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!",
-  );
+  const cleanedFooter = rawFooter
+    .replace(
+      /Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi,
+      "🏆 Play Smart, Win Big",
+    )
+    .replace(/(🔥|🍀|🚀|👑)?\s*(Good luck|Best of luck)[^\n]*/gi, "🏆 Play Smart, Win Big");
 
   return {
     header: headerLines.join("\n") || fallbackTitle,
     matches,
-    footer: cleanedFooter || "🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!",
+    footer: cleanedFooter || "🏆 Play Smart, Win Big",
   };
 }
 
@@ -465,7 +468,7 @@ function RuleModal({
   const [template, setTemplate] = useState(
     editing?.messageTemplate ??
       initialPreset?.template ??
-      "DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\n🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!",
+      "DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\n🏆 Play Smart, Win Big",
   );
   const [isActive, setIsActive] = useState(editing?.isActive ?? true);
   const [loading, setLoading] = useState(false);
@@ -1036,7 +1039,7 @@ function RuleModal({
                       setFooterText(e.target.value);
                       updateTemplateFromTable(headerText, matchRows, e.target.value);
                     }}
-                    placeholder="e.g. 🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!"
+                    placeholder="e.g. 🏆 Play Smart, Win Big"
                     className="mt-1 h-8 w-full rounded-lg border border-border bg-background px-3 text-xs outline-none focus:border-primary font-medium"
                   />
                 </div>

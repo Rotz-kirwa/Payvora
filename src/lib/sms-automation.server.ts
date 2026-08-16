@@ -145,14 +145,21 @@ export async function fetchAllRules(): Promise<RuleRow[]> {
       .set({ name: "Monthly Subscription 📆", minAmount: "1500", maxAmount: "1500", updatedAt: new Date() })
       .where(eq(smsAutomationRules.name, "Emerald"));
 
-    // Replace old "Thank you... Receipt..." text in existing database records
+    // Replace old "Thank you... Receipt..." text or previous sign-offs in existing database records
     const allRules = await db.select().from(smsAutomationRules);
     for (const rule of allRules) {
-      if (rule.messageTemplate.includes("Thank you") || rule.messageTemplate.includes("Receipt:")) {
-        const updatedTemplate = rule.messageTemplate.replace(
-          /Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi,
-          "🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!",
-        );
+      if (
+        rule.messageTemplate.includes("Thank you") ||
+        rule.messageTemplate.includes("Receipt:") ||
+        rule.messageTemplate.includes("Good luck") ||
+        rule.messageTemplate.includes("Best of luck")
+      ) {
+        const updatedTemplate = rule.messageTemplate
+          .replace(
+            /Thank you \{customer_name\} for (paying|subscribing with) KES \{amount\}\.? Receipt: \{transaction_code\}\.?/gi,
+            "🏆 Play Smart, Win Big",
+          )
+          .replace(/(🔥|🍀|🚀|👑)?\s*(Good luck|Best of luck)[^\n]*/gi, "🏆 Play Smart, Win Big");
         await db
           .update(smsAutomationRules)
           .set({ messageTemplate: updatedTemplate, updatedAt: new Date() })
@@ -254,35 +261,35 @@ export async function resetDefaultTiers(): Promise<RuleRow[]> {
       name: "Daily Matches ⚽",
       minAmount: "50",
       maxAmount: "50",
-      messageTemplate: `DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nLiverpool vs Tottenham -> Liverpool Win (1)\nManchester City vs Newcastle -> Over 2.5 Goals\nManchester United vs Aston Villa -> Both Teams To Score (BTTS)\nReal Madrid vs Sevilla -> Real Madrid Win (1)\nBarcelona vs Villarreal -> Barcelona Win (1)\nBayern Munich vs Borussia Dortmund -> Over 2.5 Goals\nInter Milan vs AC Milan -> Inter Milan Win (1)\nPSG vs Lyon -> PSG Win (1)\nJuventus vs Napoli -> Both Teams To Score (BTTS)\n🔥 Good luck with today's picks! Play responsibly & win big with OddsArena!`,
+      messageTemplate: `DAILY MATCHES ⚽\nToday's selected football predictions:\nArsenal vs Chelsea -> Arsenal Win (1)\nLiverpool vs Tottenham -> Liverpool Win (1)\nManchester City vs Newcastle -> Over 2.5 Goals\nManchester United vs Aston Villa -> Both Teams To Score (BTTS)\nReal Madrid vs Sevilla -> Real Madrid Win (1)\nBarcelona vs Villarreal -> Barcelona Win (1)\nBayern Munich vs Borussia Dortmund -> Over 2.5 Goals\nInter Milan vs AC Milan -> Inter Milan Win (1)\nPSG vs Lyon -> PSG Win (1)\nJuventus vs Napoli -> Both Teams To Score (BTTS)\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
     {
       name: "Jackpot Matches 🏆",
       minAmount: "100",
       maxAmount: "100",
-      messageTemplate: `JACKPOT MATCHES 🏆\nComplete jackpot predictions with carefully selected fixtures:\nMan City vs Arsenal -> 1X\nChelsea vs Liverpool -> GG\nReal Madrid vs Barca -> Over 2.5\nInter vs Milan -> 1\nBayern vs Dortmund -> 1X & Over 2.5\nNapoli vs Juventus -> 2X\nPSG vs Marseille -> 1\nAjax vs PSV -> Over 3.5\nPorto vs Benfica -> 1X\nCeltic vs Rangers -> 1\nMonaco vs Lyon -> GG\nValencia vs Sevilla -> 1X\nLazio vs Roma -> GG\nLeipzig vs Leverkusen -> Over 2.5\nAthletic vs Betis -> 1\n🍀 Best of luck with your Jackpot predictions! Win big with OddsArena!`,
+      messageTemplate: `JACKPOT MATCHES 🏆\nComplete jackpot predictions with carefully selected fixtures:\nMan City vs Arsenal -> 1X\nChelsea vs Liverpool -> GG\nReal Madrid vs Barca -> Over 2.5\nInter vs Milan -> 1\nBayern vs Dortmund -> 1X & Over 2.5\nNapoli vs Juventus -> 2X\nPSG vs Marseille -> 1\nAjax vs PSV -> Over 3.5\nPorto vs Benfica -> 1X\nCeltic vs Rangers -> 1\nMonaco vs Lyon -> GG\nValencia vs Sevilla -> 1X\nLazio vs Roma -> GG\nLeipzig vs Leverkusen -> Over 2.5\nAthletic vs Betis -> 1\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
     {
       name: "Basket Matches 🏀",
       minAmount: "50",
       maxAmount: "50",
-      messageTemplate: `BASKET MATCHES 🏀\nGet selected basketball predictions and expert picks:\nLakers vs Celtics -> Over 215.5 Points\nWarriors vs Bulls -> Warriors Win\nBucks vs Heat -> Bucks -4.5\nNets vs Knicks -> Over 210.0 Points\nSuns vs Mavericks -> Suns Win\nNuggets vs Clippers -> Over 220.5 Points\n76ers vs Hawks -> 76ers Win\nGrizzlies vs Kings -> Over 218.0 Points\n🔥 Good luck with your basketball picks today! Bet responsibly with OddsArena!`,
+      messageTemplate: `BASKET MATCHES 🏀\nGet selected basketball predictions and expert picks:\nLakers vs Celtics -> Over 215.5 Points\nWarriors vs Bulls -> Warriors Win\nBucks vs Heat -> Bucks -4.5\nNets vs Knicks -> Over 210.0 Points\nSuns vs Mavericks -> Suns Win\nNuggets vs Clippers -> Over 220.5 Points\n76ers vs Hawks -> 76ers Win\nGrizzlies vs Kings -> Over 218.0 Points\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
     {
       name: "Weekly Subscription 📅",
       minAmount: "500",
       maxAmount: "500",
-      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\n✓ Daily Matches\n✓ Jackpot Matches\n✓ Basketball Matches\nValid for 7 Days.\n🚀 Good luck with your weekly predictions! Enjoy premium picks from OddsArena!`,
+      messageTemplate: `WEEKLY SUBSCRIPTION 📅\nUnlimited access to premium OddsArena predictions.\n✓ Daily Matches\n✓ Jackpot Matches\n✓ Basketball Matches\nValid for 7 Days.\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
     {
       name: "Monthly Subscription 📆",
       minAmount: "1500",
       maxAmount: "1500",
-      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\n✓ Daily Football Matches\n✓ Jackpot Matches\n✓ Basketball Matches\n✓ Premium Picks\n✓ Daily Updates\nValid for 30 Days.\n👑 Best of luck with your monthly VIP predictions! Win big with OddsArena!`,
+      messageTemplate: `MONTHLY SUBSCRIPTION 📆\nComplete access to OddsArena premium predictions.\n✓ Daily Football Matches\n✓ Jackpot Matches\n✓ Basketball Matches\n✓ Premium Picks\n✓ Daily Updates\nValid for 30 Days.\n🏆 Play Smart, Win Big`,
       isActive: true,
     },
   ];
