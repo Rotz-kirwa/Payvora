@@ -9,7 +9,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_app/payments")({
   loader: () => fetchPaymentsFn(),
   component: PaymentsPage,
-  head: () => ({ meta: [{ title: "Payments — Paykit Admin" }] }),
+  head: () => ({ meta: [{ title: "Payments — Payvora Admin" }] }),
 });
 
 type MpesaStatus = MpesaPayment["status"];

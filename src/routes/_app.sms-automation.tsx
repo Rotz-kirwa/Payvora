@@ -102,7 +102,7 @@ const testSmsFn = createServerFn({ method: "POST" })
 export const Route = createFileRoute("/_app/sms-automation")({
   loader: () => fetchSmsDataFn(),
   component: SmsAutomationPage,
-  head: () => ({ meta: [{ title: "SMS Automation — Paykit Admin" }] }),
+  head: () => ({ meta: [{ title: "SMS Automation — Payvora Admin" }] }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

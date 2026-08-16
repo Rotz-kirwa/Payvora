@@ -152,7 +152,7 @@ export const Route = createFileRoute("/_app/settings")({
       masked,
     })),
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "Settings — Paykit Admin" }] }),
+  head: () => ({ meta: [{ title: "Settings — Payvora Admin" }] }),
 });
 
 // ─── Credential row component ────────────────────────────────────────────────
@@ -401,7 +401,7 @@ function SettingsPage() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Email" value={email ?? ""} />
           <Field label="Role" value="Administrator" />
-          <Field label="Workspace" value="MOBOSOFT ENTERPRISE HQ" />
+          <Field label="Workspace" value="PAYVORA HQ" />
           <Field label="Currency" value="KES (Kenyan Shilling)" />
         </div>
       </section>

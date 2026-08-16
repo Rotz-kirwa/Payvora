@@ -60,7 +60,7 @@ export function resolvePlaceholders(
 
   // {customer_name} uses the last 7 digits of phone formatted as a name
   const customerName = `0${data.phone.slice(-9)}`;
-  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "MOBOSOFT ENTERPRISE HQ";
+  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "PAYVORA";
 
   return template
     .replace(/\{customer_name\}/gi, customerName)

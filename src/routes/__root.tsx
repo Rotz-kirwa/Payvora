@@ -33,7 +33,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Payment Pulse Dashboard" },
       { name: "description", content: "M-Pesa payment analytics and management dashboard" },
-      { name: "author", content: "Paykit" },
+      { name: "author", content: "Payvora" },
       { property: "og:title", content: "Payment Pulse Dashboard" },
       { property: "og:description", content: "M-Pesa payment analytics and management dashboard" },
       { property: "og:type", content: "website" },

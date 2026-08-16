@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_app/analytics")({
   loader: () => fetchPaymentsFn(),
   component: AnalyticsPage,
-  head: () => ({ meta: [{ title: "Analytics — Paykit Admin" }] }),
+  head: () => ({ meta: [{ title: "Analytics — Payvora Admin" }] }),
 });
 
 const KES = (n: number) =>

@@ -70,7 +70,7 @@ export function DashboardLayout() {
             >
               <CreditCard className="h-5 w-5 text-white" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">Paykit</span>
+            <span className="text-lg font-bold tracking-tight text-white">Payvora</span>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}

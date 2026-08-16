@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Sign in — Paykit" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Payvora" }] }),
 });
 
 function LoginPage() {
@@ -75,10 +75,10 @@ function LoginPage() {
         {/* Logo + brand */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl shadow-2xl ring-2 ring-white/10">
-            <img src="/favicon.jpg" alt="Paykit" className="h-full w-full object-cover" />
+            <img src="/favicon.jpg" alt="Payvora" className="h-full w-full object-cover" />
           </div>
           <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Paykit</h2>
+            <h2 className="text-2xl font-bold tracking-wide text-white drop-shadow-lg">Payvora</h2>
             <p className="text-xs text-white/50 tracking-widest uppercase mt-0.5">Admin Portal</p>
           </div>
         </div>
@@ -206,11 +206,8 @@ function LoginPage() {
 
         {/* Bottom brand text */}
         <div className="mt-8 text-center">
-          <p className="text-base font-semibold tracking-widest text-white/70 uppercase">
-            MOBOSOFT ENTERPRISE HQ
-          </p>
-          <p className="mt-1 text-sm tracking-widest text-white/40 uppercase">
-            Paykit Admin
+          <p className="text-xs tracking-widest text-white/50 uppercase font-semibold">
+            Payvora Admin Portal
           </p>
         </div>
       </div>
