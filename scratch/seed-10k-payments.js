@@ -21,7 +21,7 @@ function randomPhone() {
 
 function randomReceipt() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "R";
+  let code = "U";
   for (let i = 0; i < 9; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }

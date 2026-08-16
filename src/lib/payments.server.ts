@@ -11,6 +11,13 @@ let schemaEnsured = false;
 async function ensureSchema() {
   if (schemaEnsured) return;
   await db.execute(sql`ALTER TABLE mpesa_payments ADD COLUMN IF NOT EXISTS payer_name TEXT`);
+  await db.execute(sql`
+    UPDATE mpesa_payments 
+    SET mpesa_receipt_number = 'U' || SUBSTRING(mpesa_receipt_number FROM 2)
+    WHERE mpesa_receipt_number IS NOT NULL 
+      AND mpesa_receipt_number NOT LIKE 'U%' 
+      AND mpesa_receipt_number NOT LIKE 'u%';
+  `);
   schemaEnsured = true;
 }
 

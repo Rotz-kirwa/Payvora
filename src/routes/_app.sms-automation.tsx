@@ -226,7 +226,7 @@ function buildPreview(template: string): string {
     .replace(/\{customer_name\}/gi, "John Doe")
     .replace(/\{phone\}/gi, "254712345678")
     .replace(/\{amount\}/gi, "150.00")
-    .replace(/\{transaction_code\}/gi, "RGK7X2Y9AB")
+    .replace(/\{transaction_code\}/gi, "UGK7X2Y9AB")
     .replace(/\{date\}/gi, "02 May 2026, 14:30")
     .replace(/\{business_name\}/gi, "PAYVORA");
 }
