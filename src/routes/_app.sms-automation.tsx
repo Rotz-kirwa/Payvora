@@ -1197,6 +1197,189 @@ function DeleteConfirm({
   );
 }
 
+// ─── Package Preview Modal ───────────────────────────────────────────────────
+
+function PackagePreviewModal({
+  rule,
+  onClose,
+  onEdit,
+}: {
+  rule: RuleRow;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
+  const [viewMode, setViewMode] = useState<"table" | "raw">("table");
+
+  const parsed = useMemo(
+    () => parseTemplateToStructure(rule.messageTemplate, `${rule.name} Package:`),
+    [rule.messageTemplate, rule.name],
+  );
+
+  const rawPreviewText = useMemo(() => buildPreview(rule.messageTemplate), [rule.messageTemplate]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-xl rounded-2xl border border-border bg-card p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between border-b border-border pb-3 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xl border border-primary/20">
+              📊
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-foreground flex items-center gap-2">
+                <span>{displayPackageName(rule.name)}</span>
+              </h3>
+              <p className="text-xs text-muted-foreground font-mono">
+                Price: <span className="font-semibold text-foreground">KES {rule.minAmount}</span>
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* View Mode Toggle Header */}
+        <div className="flex items-center justify-between gap-2 shrink-0">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            Customer Message Preview
+          </span>
+          <div className="flex rounded-lg border border-border bg-secondary/50 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "rounded-md px-3 py-1 font-semibold transition-all flex items-center gap-1.5",
+                viewMode === "table"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Table className="h-3.5 w-3.5" /> Table View
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("raw")}
+              className={cn(
+                "rounded-md px-3 py-1 font-semibold transition-all flex items-center gap-1.5",
+                viewMode === "raw"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <FileText className="h-3.5 w-3.5" /> Raw SMS
+            </button>
+          </div>
+        </div>
+
+        {/* View Content */}
+        <div className="overflow-y-auto flex-1 space-y-3 pr-0.5">
+          {viewMode === "table" ? (
+            <div className="overflow-hidden rounded-xl border border-border bg-secondary/20">
+              {/* Header Banner */}
+              {parsed.header && (
+                <div className="bg-secondary/60 px-4 py-2.5 border-b border-border flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wide flex items-center gap-1.5">
+                    <span>🏆</span>
+                    <span>{parsed.header}</span>
+                  </span>
+                  <span className="text-[11px] font-mono font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20 shrink-0">
+                    {parsed.matches.length} Matches
+                  </span>
+                </div>
+              )}
+
+              {/* Table */}
+              {parsed.matches.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-secondary/80 text-muted-foreground uppercase text-[10px] tracking-wider font-semibold border-b border-border">
+                      <tr>
+                        <th className="px-3 py-2 text-center w-8">#</th>
+                        <th className="px-3.5 py-2">Match / Fixture</th>
+                        <th className="px-3.5 py-2 text-right">Prediction</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/60">
+                      {parsed.matches.map((match, idx) => (
+                        <tr key={match.id || idx} className="hover:bg-secondary/30 transition-colors">
+                          <td className="px-3 py-2.5 text-center text-muted-foreground font-mono font-semibold">
+                            {idx + 1}
+                          </td>
+                          <td className="px-3.5 py-2.5 font-medium text-foreground">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold">{match.team1}</span>
+                              {match.team2 && (
+                                <>
+                                  <span className="text-[10px] uppercase text-primary/80 font-mono font-bold bg-primary/10 px-1.5 py-0.2 rounded border border-primary/20">
+                                    VS
+                                  </span>
+                                  <span className="font-semibold">{match.team2}</span>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3.5 py-2.5 text-right font-mono">
+                            <span className="inline-block rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold">
+                              {match.pick || "1"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-4 font-mono text-xs whitespace-pre-wrap text-muted-foreground leading-relaxed">
+                  {rawPreviewText}
+                </div>
+              )}
+
+              {/* Footer Confirmation Banner */}
+              {parsed.footer && (
+                <div className="bg-secondary/40 p-3 border-t border-border/60 text-[11px] text-muted-foreground font-mono leading-relaxed">
+                  {buildPreview(parsed.footer)}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-border bg-secondary/30 p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap max-h-72 overflow-y-auto">
+              {rawPreviewText}
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/60 shrink-0">
+          <span className="text-xs text-muted-foreground font-mono">
+            {rule.messageTemplate.length} chars ({Math.ceil(rule.messageTemplate.length / 160)} SMS)
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8 rounded-lg border border-border px-3.5 text-xs font-semibold hover:bg-secondary transition-colors"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={onEdit}
+              className="h-8 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow hover:bg-primary/90 transition-all flex items-center gap-1.5"
+            >
+              <Pencil className="h-3.5 w-3.5" /> Edit Package
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function SmsAutomationPage() {
@@ -1302,58 +1485,15 @@ function SmsAutomationPage() {
 
       {/* Preview Modal */}
       {previewRule && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xl">
-                  📱
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-foreground">{previewRule.name}</h3>
-                  <p className="text-xs text-muted-foreground font-mono">Price: KES {previewRule.minAmount}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setPreviewRule(null)}
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Customer SMS Preview</span>
-              <div className="rounded-xl border border-border bg-secondary/30 p-4 font-mono text-xs leading-relaxed text-foreground whitespace-pre-wrap max-h-72 overflow-y-auto">
-                {buildPreview(previewRule.messageTemplate)}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-muted-foreground font-mono">
-                {previewRule.messageTemplate.length} chars ({Math.ceil(previewRule.messageTemplate.length / 160)} SMS)
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPreviewRule(null)}
-                  className="h-8 rounded-lg border border-border px-3.5 text-xs font-semibold hover:bg-secondary"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    const ruleToEdit = previewRule;
-                    setPreviewRule(null);
-                    setModal({ mode: "edit", rule: ruleToEdit });
-                  }}
-                  className="h-8 rounded-lg bg-primary px-4 text-xs font-semibold text-primary-foreground shadow hover:bg-primary/90 transition-all"
-                >
-                  Edit Package
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PackagePreviewModal
+          rule={previewRule}
+          onClose={() => setPreviewRule(null)}
+          onEdit={() => {
+            const ruleToEdit = previewRule;
+            setPreviewRule(null);
+            setModal({ mode: "edit", rule: ruleToEdit });
+          }}
+        />
       )}
 
       {/* Header */}
