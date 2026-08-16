@@ -68,7 +68,19 @@ function RootShell({ children }: { children: React.ReactNode }) {
               "if(!globalThis.crypto.getRandomValues){return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){" +
               "var r=Math.random()*16|0,v=c==='x'?r:(r&3|8);return v.toString(16)});}" +
               "return([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,function(c){" +
-              "return(c^(globalThis.crypto.getRandomValues(new Uint8Array(1))[0]&(15>>c/4))).toString(16)});};",
+              "return(c^(globalThis.crypto.getRandomValues(new Uint8Array(1))[0]&(15>>c/4))).toString(16)});};" +
+              "if(typeof window!=='undefined'){" +
+              "window.addEventListener('unhandledrejection',function(e){" +
+              "if(e&&e.reason&&(e.reason.message?.indexOf('dynamically imported')!==-1||e.reason.message?.indexOf('Importing a module script failed')!==-1)){" +
+              "var now=Date.now();" +
+              "var lastReload=parseInt(sessionStorage.getItem('chunk_reload_time')||'0',10);" +
+              "if(now-lastReload>10000){" +
+              "sessionStorage.setItem('chunk_reload_time',now.toString());" +
+              "window.location.reload();" +
+              "}" +
+              "}" +
+              "});" +
+              "}",
           }}
         />
         <HeadContent />
