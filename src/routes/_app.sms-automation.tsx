@@ -190,6 +190,16 @@ export function formatAndCleanMatchLines(text: string): string {
   return cleaned.filter(Boolean).join("\n");
 }
 
+function buildPreview(template: string): string {
+  return template
+    .replace(/\{customer_name\}/gi, "John Doe")
+    .replace(/\{phone\}/gi, "254712345678")
+    .replace(/\{amount\}/gi, "150.00")
+    .replace(/\{transaction_code\}/gi, "RGK7X2Y9AB")
+    .replace(/\{date\}/gi, "02 May 2026, 14:30")
+    .replace(/\{business_name\}/gi, "PAYVORA");
+}
+
 // ─── Rule Modal ───────────────────────────────────────────────────────────────
 
 type ModalMode = { mode: "add" } | { mode: "edit"; rule: RuleRow };
