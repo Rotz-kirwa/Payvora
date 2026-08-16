@@ -6,7 +6,7 @@ import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight, MessageSquare,
   Send, CheckCircle2, XCircle, AlertTriangle, Loader2, X,
   Zap, ZapOff, Bell, Clock, ChevronDown, ChevronUp, Target, SlidersHorizontal,
-  Wand2, Sparkles, RefreshCw, Layers, Table, FileText, ClipboardList,
+  Wand2, Sparkles, RefreshCw, Layers, Table, FileText, ClipboardList, Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
