@@ -449,10 +449,12 @@ function RuleModal({
   modalMode,
   onClose,
   onSaved,
+  rules = [],
 }: {
   modalMode: ModalMode;
   onClose: () => void;
   onSaved: (rule: RuleRow) => void;
+  rules?: RuleRow[];
 }) {
   const editing = modalMode.mode === "edit" ? modalMode.rule : null;
   const initialPreset = modalMode.mode === "add" ? modalMode.initialPreset : null;
@@ -661,15 +663,23 @@ function RuleModal({
   }
 
   function handleSelectPreset(preset: typeof TIER_PRESETS[number]) {
+    const matched = rules.find((r) => {
+      const key = preset.name.toLowerCase().split(" ")[0];
+      return r.name.toLowerCase().includes(key);
+    });
     setName(preset.name);
-    setAmountMode("fixed");
-    setFixedAmount(preset.amount);
-    setTemplate(preset.template);
-    const parsed = parseTemplateToStructure(preset.template, `${preset.name} Tier Package:`);
+    setAmountMode(matched ? (matched.minAmount === matched.maxAmount ? "fixed" : "range") : "fixed");
+    const amt = matched ? String(matched.minAmount) : preset.amount;
+    setFixedAmount(amt);
+    setMin(amt);
+    setMax(matched ? String(matched.maxAmount) : preset.amount);
+    const tpl = matched ? matched.messageTemplate : preset.template;
+    setTemplate(tpl);
+    const parsed = parseTemplateToStructure(tpl, `${preset.name} Tier Package:`);
     setHeaderText(parsed.header);
     setMatchRows(parsed.matches);
     setFooterText(parsed.footer);
-    toast.info(`Loaded ${preset.name} (${KES(Number(preset.amount))}) Tier preset`);
+    toast.info(`Loaded ${preset.name} (${KES(Number(amt))}) Tier preset`);
   }
 
   function handleCleanFormat() {
@@ -701,21 +711,25 @@ function RuleModal({
                 <span className="text-[10px] lowercase text-muted-foreground font-normal">(click to auto-fill)</span>
               </label>
               <div className="flex flex-wrap gap-1.5">
-                {TIER_PRESETS.map((p) => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => handleSelectPreset(p)}
-                    className={cn(
-                      "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all hover:scale-[1.02]",
-                      p.badgeBg,
-                    )}
-                  >
-                    <span>{p.icon}</span>
-                    <span>{p.name}</span>
-                    <span className="font-mono text-[11px]">({KES(Number(p.amount))})</span>
-                  </button>
-                ))}
+                {TIER_PRESETS.map((p) => {
+                  const matched = rules.find((r) => r.name.toLowerCase().includes(p.name.toLowerCase().split(" ")[0]));
+                  const pAmt = matched ? matched.minAmount : Number(p.amount);
+                  return (
+                    <button
+                      key={p.name}
+                      type="button"
+                      onClick={() => handleSelectPreset(p)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all hover:scale-[1.02]",
+                        p.badgeBg,
+                      )}
+                    >
+                      <span>{p.icon}</span>
+                      <span>{p.name}</span>
+                      <span className="font-mono text-[11px]">({KES(pAmt)})</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1483,6 +1497,7 @@ function SmsAutomationPage() {
           modalMode={modal}
           onClose={() => setModal(null)}
           onSaved={handleRuleSaved}
+          rules={rules}
         />
       )}
       {deleteTarget && (
@@ -1567,8 +1582,16 @@ function SmsAutomationPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
           {TIER_PRESETS.map((preset) => {
-            const matchedRule = rules.find((r) => r.name.toLowerCase().includes(preset.name.toLowerCase().split(" ")[0]));
+            const matchedRule = rules.find((r) => {
+              const key = preset.name.toLowerCase().split(" ")[0];
+              return r.name.toLowerCase().includes(key) || preset.name.toLowerCase().includes(r.name.toLowerCase().split(" ")[0]);
+            });
             const isRuleActive = matchedRule ? matchedRule.isActive : true;
+            const cardPrice = matchedRule
+              ? matchedRule.minAmount === matchedRule.maxAmount
+                ? KES(Number(matchedRule.minAmount))
+                : `${KES(Number(matchedRule.minAmount))}–${KES(Number(matchedRule.maxAmount))}`
+              : KES(Number(preset.amount));
 
             return (
               <div
@@ -1579,7 +1602,7 @@ function SmsAutomationPage() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-2xl shrink-0">{preset.icon}</span>
                     <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-bold border font-mono shrink-0 whitespace-nowrap", preset.badgeBg)}>
-                      {KES(Number(preset.amount))}
+                      {cardPrice}
                     </span>
                   </div>
 
