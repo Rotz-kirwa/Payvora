@@ -102,7 +102,7 @@ const testSmsFn = createServerFn({ method: "POST" })
 export const Route = createFileRoute("/_app/sms-automation")({
   loader: () => fetchSmsDataFn(),
   component: SmsAutomationPage,
-  head: () => ({ meta: [{ title: "SMS Automation — Payvora Admin" }] }),
+  head: () => ({ meta: [{ title: "Prediction Console — Payvora Admin" }] }),
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1524,7 +1524,7 @@ function SmsAutomationPage() {
       {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">OddsArena Package & SMS Automation</h1>
+          <h1 className="text-2xl font-bold tracking-tight">OddsArena Prediction Console</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             Manage daily sports predictions, jackpot fixtures, basketball picks, and subscription packages.
           </p>
