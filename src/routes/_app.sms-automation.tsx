@@ -6,7 +6,7 @@ import {
   Plus, Pencil, Trash2, ToggleLeft, ToggleRight, MessageSquare,
   Send, CheckCircle2, XCircle, AlertTriangle, Loader2, X,
   Zap, ZapOff, Bell, Clock, ChevronDown, ChevronUp, Target, SlidersHorizontal,
-  Wand2, Sparkles, RefreshCw, Layers,
+  Wand2, Sparkles, RefreshCw, Layers, Table, FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -204,6 +204,108 @@ function buildPreview(template: string): string {
 
 type ModalMode = { mode: "add" } | { mode: "edit"; rule: RuleRow };
 
+type MatchRow = { id: string; team1: string; team2: string; pick: string };
+
+function parseTemplateToStructure(rawTemplate: string, fallbackTitle = "Gold Tier Package:") {
+  if (!rawTemplate || !rawTemplate.trim()) {
+    return {
+      header: fallbackTitle,
+      matches: [
+        { id: "m1", team1: "Arsenal", team2: "Everton", pick: "1" },
+        { id: "m2", team1: "Chelsea", team2: "West Ham", pick: "Over 2.5" },
+        { id: "m3", team1: "Man City", team2: "Fulham", pick: "1X" },
+      ],
+      footer: "Thank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.",
+    };
+  }
+
+  const lines = rawTemplate.split("\n");
+  const matches: MatchRow[] = [];
+  const headerLines: string[] = [];
+  const footerLines: string[] = [];
+
+  let phase: "header" | "matches" | "footer" = "header";
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const isMatchLine = /\b(vs|v)\b/i.test(trimmed) || trimmed.includes("->") || trimmed.includes("→");
+
+    if (isMatchLine) {
+      phase = "matches";
+      let team1 = "";
+      let team2 = "";
+      let pick = "";
+
+      let rest = trimmed;
+      if (rest.includes("->") || rest.includes("→")) {
+        const parts = rest.split(/->|→/);
+        rest = parts[0].trim();
+        pick = parts.slice(1).join("->").trim();
+      }
+
+      if (/\bvs\b/i.test(rest)) {
+        const parts = rest.split(/\bvs\b/i);
+        team1 = parts[0].trim();
+        team2 = parts[1].trim();
+      } else if (/\bv\b/i.test(rest)) {
+        const parts = rest.split(/\bv\b/i);
+        team1 = parts[0].trim();
+        team2 = parts[1].trim();
+      } else {
+        team1 = rest;
+      }
+
+      matches.push({
+        id: Math.random().toString(36).substring(2, 9),
+        team1,
+        team2,
+        pick,
+      });
+    } else {
+      if (phase === "header") {
+        headerLines.push(trimmed);
+      } else {
+        phase = "footer";
+        footerLines.push(trimmed);
+      }
+    }
+  }
+
+  if (matches.length === 0) {
+    matches.push(
+      { id: "m1", team1: "Arsenal", team2: "Everton", pick: "1" },
+      { id: "m2", team1: "Chelsea", team2: "West Ham", pick: "Over 2.5" },
+      { id: "m3", team1: "Man City", team2: "Fulham", pick: "1X" },
+    );
+  }
+
+  return {
+    header: headerLines.join("\n") || fallbackTitle,
+    matches,
+    footer: footerLines.join("\n") || "Thank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.",
+  };
+}
+
+function buildTemplateFromStructure(header: string, matches: MatchRow[], footer: string): string {
+  const matchLines = matches
+    .filter((m) => m.team1.trim() || m.team2.trim())
+    .map((m) => {
+      const t1 = m.team1.trim();
+      const t2 = m.team2.trim();
+      const p = m.pick.trim();
+      return `${t1}${t2 ? ` vs ${t2}` : ""}${p ? ` -> ${p}` : ""}`;
+    });
+
+  const parts = [];
+  if (header.trim()) parts.push(header.trim());
+  if (matchLines.length > 0) parts.push(matchLines.join("\n"));
+  if (footer.trim()) parts.push(footer.trim());
+
+  return parts.join("\n");
+}
+
 function RuleModal({
   modalMode,
   onClose,
@@ -223,7 +325,7 @@ function RuleModal({
   const [max, setMax] = useState(editing ? String(editing.maxAmount) : "");
   const [template, setTemplate] = useState(
     editing?.messageTemplate ??
-      "Dear {customer_name}, thank you for paying KES {amount}. Receipt: {transaction_code}. Date: {date}.",
+      "Gold Tier Package:\nArsenal vs Everton -> 1\nChelsea vs West Ham -> Over 2.5\nMan City vs Fulham -> 1X\nThank you {customer_name} for paying KES {amount}. Receipt: {transaction_code}.",
   );
   const [isActive, setIsActive] = useState(editing?.isActive ?? true);
   const [loading, setLoading] = useState(false);
@@ -233,8 +335,48 @@ function RuleModal({
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
   const [showPlaceholders, setShowPlaceholders] = useState(false);
 
+  // Table Mode State
+  const [inputMode, setInputMode] = useState<"table" | "raw">("table");
+  const initialParsed = useMemo(
+    () => parseTemplateToStructure(editing?.messageTemplate ?? "", name ? `${name} Tier Package:` : "Gold Tier Package:"),
+    [],
+  );
+
+  const [headerText, setHeaderText] = useState(initialParsed.header);
+  const [matchRows, setMatchRows] = useState<MatchRow[]>(initialParsed.matches);
+  const [footerText, setFooterText] = useState(initialParsed.footer);
+
   const preview = useMemo(() => buildPreview(template), [template]);
   const charCount = template.length;
+
+  function updateTemplateFromTable(h: string, rows: MatchRow[], f: string) {
+    const newTpl = buildTemplateFromStructure(h, rows, f);
+    setTemplate(newTpl);
+  }
+
+  function handleMatchRowChange(id: string, field: "team1" | "team2" | "pick", value: string) {
+    const updated = matchRows.map((r) => (r.id === id ? { ...r, [field]: value } : r));
+    setMatchRows(updated);
+    updateTemplateFromTable(headerText, updated, footerText);
+  }
+
+  function handleAddMatchRow() {
+    const newRow: MatchRow = {
+      id: Math.random().toString(36).substring(2, 9),
+      team1: "",
+      team2: "",
+      pick: "1",
+    };
+    const updated = [...matchRows, newRow];
+    setMatchRows(updated);
+    updateTemplateFromTable(headerText, updated, footerText);
+  }
+
+  function handleRemoveMatchRow(id: string) {
+    const updated = matchRows.filter((r) => r.id !== id);
+    setMatchRows(updated);
+    updateTemplateFromTable(headerText, updated, footerText);
+  }
 
   function insertTag(tag: string) {
     setTemplate((t) => t + tag);
@@ -308,6 +450,10 @@ function RuleModal({
     setAmountMode("fixed");
     setFixedAmount(preset.amount);
     setTemplate(preset.template);
+    const parsed = parseTemplateToStructure(preset.template, `${preset.name} Tier Package:`);
+    setHeaderText(parsed.header);
+    setMatchRows(parsed.matches);
+    setFooterText(parsed.footer);
     toast.info(`Loaded ${preset.name} (${KES(Number(preset.amount))}) Tier preset`);
   }
 
@@ -458,13 +604,46 @@ function RuleModal({
             </div>
           )}
 
-          {/* Message template & Match Line Aligner */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                SMS Message Template
-              </label>
+          {/* Message template & Table Form Builder */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-border pb-2">
+              <div className="flex items-center gap-1.5 rounded-lg bg-secondary/60 p-1 border border-border">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (inputMode !== "table") {
+                      const parsed = parseTemplateToStructure(template, name ? `${name} Tier Package:` : "Gold Tier Package:");
+                      setHeaderText(parsed.header);
+                      setMatchRows(parsed.matches);
+                      setFooterText(parsed.footer);
+                    }
+                    setInputMode("table");
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-all",
+                    inputMode === "table"
+                      ? "bg-card text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Table className="h-3.5 w-3.5 text-emerald-500" />
+                  Table Builder
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInputMode("raw")}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition-all",
+                    inputMode === "raw"
+                      ? "bg-card text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <FileText className="h-3.5 w-3.5 text-primary" />
+                  Raw Text Editor
+                </button>
+              </div>
+
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -473,20 +652,143 @@ function RuleModal({
                   className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 px-2 py-0.5 rounded-md transition-colors"
                 >
                   <Wand2 className="h-3 w-3" />
-                  Format & Align Matches
+                  Format
                 </button>
                 <span className={cn("text-xs font-mono", charCount > 460 ? "text-destructive" : "text-muted-foreground")}>
                   {charCount}/480 ({Math.ceil(charCount / 160) || 1} SMS)
                 </span>
               </div>
             </div>
-            <textarea
-              value={template}
-              onChange={(e) => setTemplate(e.target.value)}
-              rows={5}
-              placeholder="Paste matches e.g.:&#10;Chelsea vs Liverpool 2X&#10;Arsenal vs Everton 1&#10;&#10;Or type your custom message..."
-              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-mono leading-relaxed outline-none focus:border-primary resize-none"
-            />
+
+            {inputMode === "table" ? (
+              <div className="space-y-3 rounded-xl border border-border bg-secondary/20 p-3.5">
+                {/* Header Input */}
+                <div>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Package Header Title
+                  </label>
+                  <input
+                    type="text"
+                    value={headerText}
+                    onChange={(e) => {
+                      setHeaderText(e.target.value);
+                      updateTemplateFromTable(e.target.value, matchRows, footerText);
+                    }}
+                    placeholder="e.g. Gold Tier Package:"
+                    className="mt-1 h-8 w-full rounded-lg border border-border bg-background px-3 text-xs outline-none focus:border-primary font-medium"
+                  />
+                </div>
+
+                {/* Matches Table */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Match Fixtures & Predictive Results
+                    </label>
+                    <span className="text-[10px] text-emerald-500 font-bold">Auto Syncs to SMS</span>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-lg border border-border bg-background shadow-sm">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-secondary/60 text-muted-foreground font-bold uppercase border-b border-border text-[10px]">
+                        <tr>
+                          <th className="p-2 w-8 text-center">#</th>
+                          <th className="p-2">Team 1 (Home)</th>
+                          <th className="p-2 w-8 text-center text-muted-foreground">vs</th>
+                          <th className="p-2">Team 2 (Away)</th>
+                          <th className="p-2">Predictive Result / Pick</th>
+                          <th className="p-2 w-8 text-center"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/60">
+                        {matchRows.map((m, idx) => (
+                          <tr key={m.id} className="hover:bg-secondary/20 transition-colors">
+                            <td className="p-2 text-center font-mono font-bold text-muted-foreground text-[11px]">
+                              {idx + 1}
+                            </td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={m.team1}
+                                onChange={(e) => handleMatchRowChange(m.id, "team1", e.target.value)}
+                                placeholder="e.g. Arsenal"
+                                className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-semibold outline-none focus:border-primary"
+                              />
+                            </td>
+                            <td className="p-2 text-center text-[10px] font-bold text-muted-foreground">
+                              vs
+                            </td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={m.team2}
+                                onChange={(e) => handleMatchRowChange(m.id, "team2", e.target.value)}
+                                placeholder="e.g. Everton"
+                                className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-semibold outline-none focus:border-primary"
+                              />
+                            </td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={m.pick}
+                                onChange={(e) => handleMatchRowChange(m.id, "pick", e.target.value)}
+                                placeholder="e.g. 1 / Over 2.5 / GG"
+                                className="w-full rounded-md border border-border/80 bg-background p-1.5 text-xs font-mono font-bold text-primary outline-none focus:border-primary"
+                              />
+                            </td>
+                            <td className="p-2 text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMatchRow(m.id)}
+                                className="p-1 text-muted-foreground hover:text-rose-500 transition-colors"
+                                title="Remove row"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddMatchRow}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-500 hover:bg-emerald-500/20 transition-all"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Match Fixture Row
+                  </button>
+                </div>
+
+                {/* Footer Input */}
+                <div>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Footer & Customer Note
+                  </label>
+                  <input
+                    type="text"
+                    value={footerText}
+                    onChange={(e) => {
+                      setFooterText(e.target.value);
+                      updateTemplateFromTable(headerText, matchRows, e.target.value);
+                    }}
+                    placeholder="e.g. Thank you {customer_name} for paying KES {amount}."
+                    className="mt-1 h-8 w-full rounded-lg border border-border bg-background px-3 text-xs outline-none focus:border-primary font-medium"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <textarea
+                  value={template}
+                  onChange={(e) => setTemplate(e.target.value)}
+                  rows={5}
+                  placeholder="Paste matches e.g.:&#10;Chelsea vs Liverpool 2X&#10;Arsenal vs Everton 1&#10;&#10;Or type your custom message..."
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-mono leading-relaxed outline-none focus:border-primary resize-none"
+                />
+              </div>
+            )}
 
             {/* Placeholder insert buttons */}
             <div className="mt-2">
