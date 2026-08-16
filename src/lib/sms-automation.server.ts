@@ -58,9 +58,9 @@ export function resolvePlaceholders(
     timeZone: "Africa/Nairobi",
   });
 
-  // {customer_name} uses the last 7 digits of phone formatted as a name
   const customerName = `0${data.phone.slice(-9)}`;
-  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "PAYVORA";
+  const businessName = data.businessName ?? process.env.BUSINESS_NAME ?? "OddsArena";
+  const defaultPredictions = data.predictionsText ?? "⚽ Chelsea vs Arsenal → 1X (1.45)\n⚽ Real Madrid vs Sevilla → OVER 2.5 (1.70)";
 
   return template
     .replace(/\{customer_name\}/gi, customerName)
@@ -68,7 +68,8 @@ export function resolvePlaceholders(
     .replace(/\{amount\}/gi, formattedAmount)
     .replace(/\{transaction_code\}/gi, data.transactionCode ?? "N/A")
     .replace(/\{date\}/gi, formattedDate)
-    .replace(/\{business_name\}/gi, businessName);
+    .replace(/\{business_name\}/gi, businessName)
+    .replace(/\{predictions\}/gi, defaultPredictions);
 }
 
 // ─── Global enabled flag ──────────────────────────────────────────────────────

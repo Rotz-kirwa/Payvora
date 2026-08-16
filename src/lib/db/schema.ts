@@ -83,6 +83,53 @@ export const appSettings = pgTable("app_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ─── Predictions ─────────────────────────────────────────────────────────────
+
+export const predictions = pgTable("predictions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sport: text("sport", { enum: ["football", "basketball"] }).notNull().default("football"),
+  league: text("league").notNull().default(""),
+  matchDate: timestamp("match_date", { withTimezone: true }).notNull().defaultNow(),
+  team1: text("team1").notNull(),
+  team2: text("team2").notNull(),
+  prediction: text("prediction").notNull(),
+  odds: numeric("odds", { precision: 5, scale: 2 }).notNull().default("1.85"),
+  predictionType: text("prediction_type").notNull().default("Gold"),
+  confidence: integer("confidence").notNull().default(85),
+  score1: integer("score1"),
+  score2: integer("score2"),
+  actualResult: text("actual_result"),
+  status: text("status", { enum: ["pending", "won", "lost", "void"] }).notNull().default("pending"),
+  isPublished: boolean("is_published").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ─── Jackpots ─────────────────────────────────────────────────────────────────
+
+export const jackpots = pgTable("jackpots", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  jackpotCode: text("jackpot_code").notNull().unique(),
+  title: text("title").notNull().default("ODDSARENA MEGA JACKPOT"),
+  totalOdds: numeric("total_odds", { precision: 8, scale: 2 }).notNull().default("10.00"),
+  status: text("status", { enum: ["OPEN", "CLOSED", "SETTLED"] }).notNull().default("OPEN"),
+  isPublished: boolean("is_published").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const jackpotMatches = pgTable("jackpot_matches", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  jackpotId: uuid("jackpot_id").references(() => jackpots.id, { onDelete: "cascade" }),
+  matchOrder: integer("match_order").notNull().default(1),
+  team1: text("team1").notNull(),
+  team2: text("team2").notNull(),
+  prediction: text("prediction").notNull(),
+  score1: integer("score1"),
+  score2: integer("score2"),
+  status: text("status", { enum: ["pending", "won", "lost", "void"] }).notNull().default("pending"),
+});
+
 // ─── Inferred types ───────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
@@ -90,3 +137,6 @@ export type MpesaPayment = typeof mpesaPayments.$inferSelect;
 export type SmsAutomationRule = typeof smsAutomationRules.$inferSelect;
 export type SmsLog = typeof smsLogs.$inferSelect;
 export type AppSetting = typeof appSettings.$inferSelect;
+export type Prediction = typeof predictions.$inferSelect;
+export type Jackpot = typeof jackpots.$inferSelect;
+export type JackpotMatch = typeof jackpotMatches.$inferSelect;

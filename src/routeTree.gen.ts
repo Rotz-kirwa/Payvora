@@ -20,6 +20,7 @@ import { Route as C2bConfirmationRouteImport } from './routes/c2b.confirmation'
 import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as AppSmsAutomationRouteImport } from './routes/_app.sms-automation'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppPredictionsRouteImport } from './routes/_app.predictions'
 import { Route as AppPaymentsRouteImport } from './routes/_app.payments'
 import { Route as AppDebugRouteImport } from './routes/_app.debug'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
@@ -85,6 +86,11 @@ const AppSmsAutomationRoute = AppSmsAutomationRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPredictionsRoute = AppPredictionsRouteImport.update({
+  id: '/predictions',
+  path: '/predictions',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPaymentsRoute = AppPaymentsRouteImport.update({
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof AppCustomersRoute
   '/debug': typeof AppDebugRoute
   '/payments': typeof AppPaymentsRoute
+  '/predictions': typeof AppPredictionsRoute
   '/settings': typeof AppSettingsRoute
   '/sms-automation': typeof AppSmsAutomationRoute
   '/api/health': typeof ApiHealthRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AppCustomersRoute
   '/debug': typeof AppDebugRoute
   '/payments': typeof AppPaymentsRoute
+  '/predictions': typeof AppPredictionsRoute
   '/settings': typeof AppSettingsRoute
   '/sms-automation': typeof AppSmsAutomationRoute
   '/api/health': typeof ApiHealthRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/_app/customers': typeof AppCustomersRoute
   '/_app/debug': typeof AppDebugRoute
   '/_app/payments': typeof AppPaymentsRoute
+  '/_app/predictions': typeof AppPredictionsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/sms-automation': typeof AppSmsAutomationRoute
   '/api/health': typeof ApiHealthRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/debug'
     | '/payments'
+    | '/predictions'
     | '/settings'
     | '/sms-automation'
     | '/api/health'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/debug'
     | '/payments'
+    | '/predictions'
     | '/settings'
     | '/sms-automation'
     | '/api/health'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/_app/customers'
     | '/_app/debug'
     | '/_app/payments'
+    | '/_app/predictions'
     | '/_app/settings'
     | '/_app/sms-automation'
     | '/api/health'
@@ -398,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/predictions': {
+      id: '/_app/predictions'
+      path: '/predictions'
+      fullPath: '/predictions'
+      preLoaderRoute: typeof AppPredictionsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/payments': {
       id: '/_app/payments'
       path: '/payments'
@@ -490,6 +509,7 @@ interface AppRouteChildren {
   AppCustomersRoute: typeof AppCustomersRoute
   AppDebugRoute: typeof AppDebugRoute
   AppPaymentsRoute: typeof AppPaymentsRoute
+  AppPredictionsRoute: typeof AppPredictionsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppSmsAutomationRoute: typeof AppSmsAutomationRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -500,6 +520,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCustomersRoute: AppCustomersRoute,
   AppDebugRoute: AppDebugRoute,
   AppPaymentsRoute: AppPaymentsRoute,
+  AppPredictionsRoute: AppPredictionsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppSmsAutomationRoute: AppSmsAutomationRoute,
   AppIndexRoute: AppIndexRoute,

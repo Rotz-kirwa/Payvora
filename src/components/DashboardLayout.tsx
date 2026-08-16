@@ -11,12 +11,14 @@ import {
   X,
   Bot,
   Bug,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/predictions", label: "Predictions & Odds", icon: Trophy },
   { to: "/payments", label: "Payments", icon: CreditCard },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/sms-automation", label: "SMS Automation", icon: Bot },
