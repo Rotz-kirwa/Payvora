@@ -123,6 +123,15 @@ export async function fetchAllRules(): Promise<RuleRow[]> {
     .select()
     .from(smsAutomationRules)
     .orderBy(smsAutomationRules.minAmount);
+
+  const hasLegacyNames = rows.some((r) =>
+    ["gold", "daily football games", "platinum", "sapphire", "ruby", "emerald"].includes(r.name.toLowerCase().trim()),
+  );
+
+  if (hasLegacyNames || rows.length === 0) {
+    return resetDefaultTiers();
+  }
+
   return rows.map(toRuleRow);
 }
 
